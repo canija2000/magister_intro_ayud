@@ -1,0 +1,17 @@
+# Notebooks de referencia (no se publican)
+*.ipynb
+.ipynb_checkpoints/
+
+# Datos crudos y entornos
+*.csv
+*.parquet
+data/
+.venv/
+venv/
+__pycache__/
+
+# Sistema / editores
+.DS_Store
+.vscode/
+.idea/
+.claude/

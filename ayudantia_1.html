@@ -1,0 +1,3072 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ayudantía 1: Webscraping y APIs</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-soft: #f7f8fa;
+      --bg-code: #f6f8fa;
+      --fg: #212529;
+      --fg-muted: #5c6670;
+      --border: #dee2e6;
+      --accent: #2780e3;
+      --accent-soft: #e7f1fc;
+      --ok: #1f8a4c;
+      --ok-soft: #e6f4ec;
+      --warn: #b26a00;
+      --warn-soft: #fff4e0;
+      --err: #c0392b;
+      --err-soft: #fdecea;
+      --hit: #ffe58a;
+      --hit-strong: #f5b700;
+      --tok-kw: #a626a4;
+      --tok-str: #2e7d32;
+      --tok-num: #b35c00;
+      --tok-com: #8a929a;
+      --tok-fn: #1565c0;
+      --tok-tag: #c2185b;
+      --tok-attr: #7b5e00;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .08);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #16181d;
+        --bg-soft: #1d2027;
+        --bg-code: #1f232a;
+        --fg: #e4e6eb;
+        --fg-muted: #a0a7b1;
+        --border: #343a44;
+        --accent: #5aa6f5;
+        --accent-soft: #1d3047;
+        --ok: #4cc27e;
+        --ok-soft: #173226;
+        --warn: #f0b04a;
+        --warn-soft: #3a2c14;
+        --err: #f07167;
+        --err-soft: #3d1d1b;
+        --hit: #5b4a10;
+        --hit-strong: #f5c542;
+        --tok-kw: #d48ee0;
+        --tok-str: #8fd18f;
+        --tok-num: #f0a868;
+        --tok-com: #7d8590;
+        --tok-fn: #7fb8f5;
+        --tok-tag: #f48fb1;
+        --tok-attr: #e6c86e;
+        --shadow: none;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #16181d;
+      --bg-soft: #1d2027;
+      --bg-code: #1f232a;
+      --fg: #e4e6eb;
+      --fg-muted: #a0a7b1;
+      --border: #343a44;
+      --accent: #5aa6f5;
+      --accent-soft: #1d3047;
+      --ok: #4cc27e;
+      --ok-soft: #173226;
+      --warn: #f0b04a;
+      --warn-soft: #3a2c14;
+      --err: #f07167;
+      --err-soft: #3d1d1b;
+      --hit: #5b4a10;
+      --hit-strong: #f5c542;
+      --tok-kw: #d48ee0;
+      --tok-str: #8fd18f;
+      --tok-num: #f0a868;
+      --tok-com: #7d8590;
+      --tok-fn: #7fb8f5;
+      --tok-tag: #f48fb1;
+      --tok-attr: #e6c86e;
+      --shadow: none;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
+    }
+
+    a {
+      color: var(--accent)
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: .875em;
+      background: var(--bg-code);
+      padding: .1em .3em;
+      border-radius: 4px;
+      color: var(--tok-tag)
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      line-height: 1.25;
+      margin: 2rem 0 .75rem
+    }
+
+    h2 {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: .4rem;
+      margin-top: 3rem
+    }
+
+    h2 .num,
+    h3 .num {
+      color: var(--fg-muted);
+      margin-right: .5rem;
+      font-weight: 500
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 820px) 220px;
+      gap: 48px;
+      justify-content: center;
+      padding: 0 24px
+    }
+
+    main {
+      min-width: 0
+    }
+
+    nav.toc {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      max-height: calc(100vh - 40px);
+      overflow: auto;
+      font-size: .85rem;
+      padding-top: 2.5rem
+    }
+
+    nav.toc h5 {
+      margin: 0 0 .5rem;
+      font-size: .85rem;
+      color: var(--fg)
+    }
+
+    nav.toc ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      border-left: 1px solid var(--border)
+    }
+
+    nav.toc ul ul {
+      border: 0;
+      padding-left: .8rem
+    }
+
+    nav.toc a {
+      display: block;
+      padding: .15rem .7rem;
+      color: var(--fg-muted);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      margin-left: -1px
+    }
+
+    nav.toc a.active {
+      color: var(--accent);
+      border-left-color: var(--accent)
+    }
+
+    @media (max-width:1100px) {
+      .layout {
+        grid-template-columns: minmax(0, 820px)
+      }
+
+      nav.toc {
+        display: none
+      }
+    }
+
+    @media (max-width:600px) {
+      .layout {
+        padding: 0 16px
+      }
+    }
+
+    header.title-block {
+      padding: 2.2rem 0 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem
+    }
+
+    header.title-block h1 {
+      margin: 0 0 .3rem;
+      font-size: 2.2rem
+    }
+
+    .title-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem 2rem;
+      color: var(--fg-muted);
+      font-size: .9rem;
+      align-items: center
+    }
+
+    .code-tools {
+      margin-left: auto;
+      display: flex;
+      gap: .4rem
+    }
+
+    button,
+    .btn {
+      font: inherit;
+      font-size: .85rem;
+      padding: .35rem .75rem;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      color: var(--fg);
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block
+    }
+
+    button:hover,
+    .btn:hover {
+      border-color: var(--accent)
+    }
+
+    button.primary,
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff
+    }
+
+    button.primary:hover,
+    .btn.primary:hover {
+      filter: brightness(1.08)
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    button.chip {
+      border-radius: 999px;
+      padding: .2rem .65rem;
+      font-family: var(--mono);
+      font-size: .8rem
+    }
+
+    button.chip.on {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent)
+    }
+
+    input[type=text],
+    input[type=password],
+    select,
+    textarea {
+      font: inherit;
+      font-size: .9rem;
+      padding: .35rem .5rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--fg)
+    }
+
+    input[type=text].mono,
+    textarea.mono {
+      font-family: var(--mono);
+      font-size: .85rem
+    }
+
+    input[type=range] {
+      accent-color: var(--accent)
+    }
+
+    /* code blocks */
+    details.code-fold {
+      margin: 1rem 0 0
+    }
+
+    details.code-fold>summary {
+      cursor: pointer;
+      font-size: .85rem;
+      color: var(--fg-muted);
+      list-style: none;
+      user-select: none
+    }
+
+    details.code-fold>summary::before {
+      content: "▸ ";
+      display: inline-block;
+      transition: transform .15s
+    }
+
+    details.code-fold[open]>summary::before {
+      transform: rotate(90deg)
+    }
+
+    pre.src {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: .8rem 1rem;
+      overflow: auto;
+      font: 13.5px/1.5 var(--mono);
+      margin: .4rem 0 0
+    }
+
+    pre.out {
+      background: transparent;
+      border: 0;
+      padding: .6rem 1rem;
+      margin: 0 0 1rem;
+      font: 13px/1.45 var(--mono);
+      overflow: auto;
+      color: var(--fg);
+      white-space: pre-wrap
+    }
+
+    .tk-k {
+      color: var(--tok-kw)
+    }
+
+    .tk-s {
+      color: var(--tok-str)
+    }
+
+    .tk-n {
+      color: var(--tok-num)
+    }
+
+    .tk-c {
+      color: var(--tok-com);
+      font-style: italic
+    }
+
+    .tk-f {
+      color: var(--tok-fn)
+    }
+
+    .tk-t {
+      color: var(--tok-tag)
+    }
+
+    .tk-a {
+      color: var(--tok-attr)
+    }
+
+    /* callouts */
+    .callout {
+      border: 1px solid var(--border);
+      border-left: 5px solid var(--accent);
+      border-radius: 6px;
+      padding: .7rem 1rem;
+      margin: 1.2rem 0;
+      background: var(--bg-soft)
+    }
+
+    .callout>.ct {
+      font-weight: 600;
+      margin-bottom: .3rem;
+      display: flex;
+      gap: .4rem;
+      align-items: center
+    }
+
+    .callout.tip {
+      border-left-color: var(--ok)
+    }
+
+    .callout.warn {
+      border-left-color: var(--warn)
+    }
+
+    .callout.def {
+      border-left-color: #8e44ad
+    }
+
+    .callout p:last-child {
+      margin-bottom: 0
+    }
+
+    .callout p:first-of-type {
+      margin-top: 0
+    }
+
+    ol.steps {
+      counter-reset: s;
+      list-style: none;
+      padding-left: 0
+    }
+
+    ol.steps>li {
+      counter-increment: s;
+      position: relative;
+      padding-left: 2.4rem;
+      margin: .6rem 0
+    }
+
+    ol.steps>li::before {
+      content: counter(s);
+      position: absolute;
+      left: 0;
+      top: .05rem;
+      width: 1.7rem;
+      height: 1.7rem;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: .85rem;
+      display: grid;
+      place-items: center
+    }
+
+    /* widget shell */
+    .widget {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin: 1.4rem 0;
+      background: var(--bg);
+      box-shadow: var(--shadow);
+      overflow: hidden
+    }
+
+    .widget>.wh {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .55rem .9rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-soft);
+      font-size: .85rem;
+      font-weight: 600;
+      flex-wrap: wrap
+    }
+
+    .widget>.wh .tag {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: .1rem .45rem;
+      border-radius: 4px
+    }
+
+    .widget>.wb {
+      padding: .9rem
+    }
+
+    .row {
+      display: flex;
+      gap: .6rem;
+      flex-wrap: wrap;
+      align-items: center
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .9rem
+    }
+
+    @media (max-width:700px) {
+      .grid2 {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .pane {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      min-width: 0;
+      display: flex;
+      flex-direction: column
+    }
+
+    .pane>.ph {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--fg-muted);
+      padding: .3rem .6rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-soft);
+      display: flex;
+      justify-content: space-between;
+      gap: .5rem
+    }
+
+    .pane>.pb {
+      padding: .6rem;
+      overflow: auto;
+      flex: 1
+    }
+
+    .muted {
+      color: var(--fg-muted)
+    }
+
+    .small {
+      font-size: .85rem
+    }
+
+    .mono {
+      font-family: var(--mono)
+    }
+
+    .pill {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: .78rem;
+      padding: .05rem .45rem;
+      border-radius: 4px;
+      background: var(--bg-code);
+      border: 1px solid var(--border)
+    }
+
+    .pill.ok {
+      background: var(--ok-soft);
+      border-color: var(--ok);
+      color: var(--ok)
+    }
+
+    .pill.err {
+      background: var(--err-soft);
+      border-color: var(--err);
+      color: var(--err)
+    }
+
+    .pill.warn {
+      background: var(--warn-soft);
+      border-color: var(--warn);
+      color: var(--warn)
+    }
+
+    table.df {
+      border-collapse: collapse;
+      font: 12.5px/1.4 var(--mono);
+      width: 100%
+    }
+
+    table.df th,
+    table.df td {
+      border-bottom: 1px solid var(--border);
+      padding: .25rem .5rem;
+      text-align: right;
+      white-space: nowrap
+    }
+
+    table.df th {
+      font-weight: 700;
+      background: var(--bg-soft);
+      position: sticky;
+      top: 0
+    }
+
+    table.df td:first-child,
+    table.df th:first-child {
+      color: var(--fg-muted)
+    }
+
+    table.df tr.new td {
+      animation: flash 1s ease
+    }
+
+    @keyframes flash {
+      from {
+        background: var(--hit)
+      }
+
+      to {
+        background: transparent
+      }
+    }
+
+    /* HTML playground */
+    .pg textarea {
+      width: 100%;
+      min-height: 190px;
+      border: 0;
+      border-radius: 0;
+      resize: vertical;
+      font: 13px/1.5 var(--mono);
+      background: var(--bg-code);
+      padding: .6rem
+    }
+
+    .pg iframe {
+      width: 100%;
+      border: 0;
+      min-height: 190px;
+      background: #fff
+    }
+
+    .dom-tree {
+      font: 12.5px/1.6 var(--mono)
+    }
+
+    .dom-tree .n {
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 0 .25rem
+    }
+
+    .dom-tree .n:hover,
+    .dom-tree .n.sel {
+      background: var(--hit)
+    }
+
+    .dom-tree ul {
+      list-style: none;
+      margin: 0;
+      padding-left: 1.1rem;
+      border-left: 1px dashed var(--border)
+    }
+
+    .dom-tree>ul {
+      border: 0;
+      padding-left: 0
+    }
+
+    .attr-box {
+      font: 12.5px/1.5 var(--mono);
+      margin-top: .5rem;
+      padding: .5rem;
+      border-radius: 6px;
+      background: var(--bg-code);
+      min-height: 2.6rem
+    }
+
+    /* HTTP sim */
+    .http-stage {
+      position: relative
+    }
+
+    .http-stage svg {
+      width: 100%;
+      height: auto;
+      display: block
+    }
+
+    .msg {
+      font: 12.5px/1.5 var(--mono);
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin: 0;
+      min-height: 7.5rem
+    }
+
+    .status-legend {
+      display: flex;
+      gap: .4rem;
+      flex-wrap: wrap;
+      margin-top: .6rem
+    }
+
+    .status-legend span {
+      font-size: .78rem;
+      padding: .15rem .5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      transition: all .3s
+    }
+
+    .status-legend span.lit {
+      transform: scale(1.08);
+      font-weight: 700
+    }
+
+    /* mock site */
+    .mock {
+      font-family: Georgia, "Times New Roman", serif;
+      color: #333;
+      background: #fffdf7;
+      font-size: 13px
+    }
+
+    .mock .m-head {
+      background: #f0e9d6;
+      padding: .4rem .7rem;
+      font-size: 1.1rem;
+      color: #5f4b1d
+    }
+
+    .mock .m-body {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: .6rem;
+      padding: .6rem
+    }
+
+    .mock ul {
+      list-style: none;
+      padding: 0;
+      margin: 0
+    }
+
+    .mock .nav-list a {
+      color: #337ab7;
+      font-size: 12px;
+      text-decoration: none
+    }
+
+    .mock ol.row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+      gap: .5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none
+    }
+
+    .mock article.product_pod {
+      border: 1px solid #e6dfcc;
+      padding: .4rem;
+      border-radius: 4px;
+      background: #fff;
+      transition: outline .1s
+    }
+
+    .mock .image_container {
+      height: 54px;
+      border-radius: 2px;
+      margin-bottom: .3rem
+    }
+
+    .mock .star-rating {
+      color: #e5a100;
+      margin: 0;
+      font-size: 11px;
+      letter-spacing: 1px
+    }
+
+    .mock h3 {
+      font-size: 12px;
+      margin: .2rem 0;
+      line-height: 1.2
+    }
+
+    .mock h3 a {
+      color: #337ab7;
+      text-decoration: none
+    }
+
+    .mock .price_color {
+      color: #3c763d;
+      font-weight: bold;
+      margin: .15rem 0
+    }
+
+    .mock .availability {
+      color: #3c763d;
+      font-size: 11px;
+      margin: 0 0 .3rem
+    }
+
+    .mock .availability.out {
+      color: #a94442
+    }
+
+    .mock button {
+      font-size: 10px;
+      padding: .15rem .3rem;
+      background: #337ab7;
+      color: #fff;
+      border: 0;
+      border-radius: 3px;
+      width: 100%
+    }
+
+    .mock .pager {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: .6rem;
+      font-size: 12px
+    }
+
+    .mock .pager a {
+      color: #337ab7
+    }
+
+    .mock .hit {
+      outline: 3px solid var(--hit-strong) !important;
+      outline-offset: 1px;
+      background-color: rgba(245, 183, 0, .15) !important
+    }
+
+    .src-view {
+      font: 12px/1.55 var(--mono);
+      white-space: pre;
+      margin: 0;
+      max-height: 380px;
+      overflow: auto;
+      padding: .3rem 0
+    }
+
+    .src-view .ln {
+      display: block;
+      padding: 0 .6rem
+    }
+
+    .src-view .ln.hit {
+      background: var(--hit)
+    }
+
+    .src-view .ln.hit-start {
+      box-shadow: inset 3px 0 var(--hit-strong)
+    }
+
+    .result-list {
+      font: 12.5px/1.5 var(--mono);
+      max-height: 180px;
+      overflow: auto;
+      margin: 0;
+      padding-left: 1.4rem
+    }
+
+    .err-text {
+      color: var(--err)
+    }
+
+    /* stepper */
+    .stepper .step-line {
+      font: 13px/1.6 var(--mono);
+      padding: .15rem .5rem;
+      border-radius: 4px;
+      opacity: .55;
+      transition: all .2s
+    }
+
+    .stepper .step-line.cur {
+      opacity: 1;
+      background: var(--accent-soft);
+      box-shadow: inset 3px 0 var(--accent)
+    }
+
+    .stepper .step-line.done {
+      opacity: 1
+    }
+
+    .valbox {
+      font: 13px/1.5 var(--mono);
+      background: var(--bg-code);
+      border-radius: 6px;
+      padding: .5rem .7rem;
+      margin-top: .5rem;
+      min-height: 2.4rem;
+      white-space: pre-wrap;
+      word-break: break-word
+    }
+
+    .arrow {
+      color: var(--fg-muted)
+    }
+
+    /* progress */
+    .prog {
+      height: 10px;
+      background: var(--bg-code);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border)
+    }
+
+    .prog>div {
+      height: 100%;
+      background: var(--accent);
+      width: 0;
+      transition: width .15s
+    }
+
+    .log {
+      font: 12px/1.5 var(--mono);
+      max-height: 160px;
+      overflow: auto;
+      background: var(--bg-code);
+      border-radius: 6px;
+      padding: .4rem .6rem;
+      margin-top: .6rem
+    }
+
+    .log div.e {
+      color: var(--err)
+    }
+
+    .log div.o {
+      color: var(--ok)
+    }
+
+    .stat {
+      display: inline-flex;
+      flex-direction: column;
+      padding: .4rem .8rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      min-width: 96px
+    }
+
+    .stat b {
+      font-size: 1.25rem;
+      font-variant-numeric: tabular-nums
+    }
+
+    .stat span {
+      font-size: .72rem;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: .04em
+    }
+
+    /* URL builder */
+    .url-out {
+      font: 14px/1.7 var(--mono);
+      word-break: break-all;
+      padding: .6rem .8rem;
+      background: var(--bg-code);
+      border-radius: 8px;
+      border: 1px solid var(--border)
+    }
+
+    .url-out span {
+      border-radius: 3px;
+      padding: 0 1px;
+      cursor: help
+    }
+
+    .u-scheme {
+      background: rgba(142, 68, 173, .18)
+    }
+
+    .u-host {
+      background: rgba(39, 128, 227, .18)
+    }
+
+    .u-path {
+      background: rgba(31, 138, 76, .18)
+    }
+
+    .u-param {
+      background: rgba(178, 106, 0, .22)
+    }
+
+    .u-query {
+      background: rgba(192, 57, 43, .18)
+    }
+
+    .u-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-top: .5rem;
+      font-size: .78rem
+    }
+
+    .u-legend span {
+      padding: .1rem .45rem;
+      border-radius: 4px
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: .4rem .7rem;
+      align-items: center;
+      font-size: .88rem;
+      margin-bottom: .7rem
+    }
+
+    @media (max-width:600px) {
+      .form-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    /* JSON tree */
+    .jtree {
+      font: 12.5px/1.6 var(--mono);
+      max-height: 360px;
+      overflow: auto
+    }
+
+    .jtree ul {
+      list-style: none;
+      margin: 0;
+      padding-left: 1rem;
+      border-left: 1px dashed var(--border)
+    }
+
+    .jtree>ul {
+      padding-left: 0;
+      border: 0
+    }
+
+    .jtree .k {
+      color: var(--tok-fn);
+      cursor: pointer;
+      border-radius: 3px;
+      padding: 0 .15rem
+    }
+
+    .jtree .k:hover {
+      background: var(--hit)
+    }
+
+    .jtree .tg {
+      cursor: pointer;
+      color: var(--fg-muted);
+      display: inline-block;
+      width: 1rem;
+      user-select: none
+    }
+
+    .jtree .v-n {
+      color: var(--tok-num)
+    }
+
+    .jtree .v-s {
+      color: var(--tok-str)
+    }
+
+    .jtree .meta {
+      color: var(--fg-muted);
+      font-size: .9em
+    }
+
+    .jtree li.path>.k {
+      background: var(--hit)
+    }
+
+    .jtree li.cur>.k {
+      background: var(--hit-strong);
+      color: #000
+    }
+
+    .access {
+      font: 13px/1.5 var(--mono);
+      padding: .55rem .7rem;
+      border-radius: 6px;
+      background: var(--bg-code);
+      word-break: break-all
+    }
+
+    .levels {
+      display: flex;
+      gap: .3rem;
+      flex-wrap: wrap;
+      margin: .5rem 0
+    }
+
+    .levels span {
+      font: 12px var(--mono);
+      padding: .15rem .5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border)
+    }
+
+    .levels span.on {
+      background: var(--hit-strong);
+      color: #000;
+      border-color: var(--hit-strong)
+    }
+
+    /* map */
+    .mapwrap {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 1rem;
+      align-items: start
+    }
+
+    @media (max-width:640px) {
+      .mapwrap {
+        grid-template-columns: 1fr
+      }
+
+      .mapwrap svg.map {
+        max-width: 170px;
+        margin: 0 auto
+      }
+    }
+
+    svg.map {
+      width: 100%;
+      height: auto;
+      display: block
+    }
+
+    svg.map path {
+      stroke: var(--fg-muted);
+      stroke-width: .35;
+      vector-effect: non-scaling-stroke
+    }
+
+    svg.map path.reg {
+      stroke: var(--bg);
+      stroke-width: .8
+    }
+
+    svg.map path.reg:hover {
+      stroke: var(--fg);
+      stroke-width: 1.5
+    }
+
+    .tip {
+      position: fixed;
+      pointer-events: none;
+      background: var(--fg);
+      color: var(--bg);
+      font-size: .8rem;
+      padding: .3rem .55rem;
+      border-radius: 5px;
+      z-index: 50;
+      opacity: 0;
+      transition: opacity .1s;
+      max-width: 260px
+    }
+
+    .bars {
+      font-size: .78rem
+    }
+
+    .bars .b {
+      display: grid;
+      grid-template-columns: 150px 1fr 70px;
+      gap: .4rem;
+      align-items: center;
+      margin: 2px 0
+    }
+
+    .bars .b .bar {
+      height: 12px;
+      background: var(--accent);
+      border-radius: 0 3px 3px 0;
+      transition: width .4s
+    }
+
+    .bars .b .lbl {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .bars .b .v {
+      font-family: var(--mono);
+      text-align: right
+    }
+
+    .bars .b.na .lbl,
+    .bars .b.na .v {
+      color: var(--fg-muted)
+    }
+
+    .scale {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .75rem;
+      color: var(--fg-muted);
+      margin-top: .4rem
+    }
+
+    .scale .ramp {
+      height: 10px;
+      flex: 1;
+      border-radius: 3px;
+      max-width: 180px
+    }
+
+    /* NaN demo */
+    .chips {
+      display: flex;
+      gap: .4rem;
+      flex-wrap: wrap;
+      margin: .5rem 0
+    }
+
+    .chips .c {
+      font: 13px var(--mono);
+      padding: .3rem .6rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      min-width: 56px;
+      text-align: center;
+      transition: all .25s
+    }
+
+    .chips .c.nan {
+      border-style: dashed;
+      color: var(--err)
+    }
+
+    .chips .c.cur {
+      background: var(--accent-soft);
+      border-color: var(--accent)
+    }
+
+    .chips .c.best {
+      box-shadow: 0 0 0 2px var(--ok)
+    }
+
+    /* quiz */
+    .quiz {
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: .7rem .9rem;
+      margin: 1.2rem 0
+    }
+
+    .quiz .q {
+      font-weight: 600;
+      margin-bottom: .5rem
+    }
+
+    .quiz .opts {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem
+    }
+
+    .quiz .opts button {
+      text-align: left;
+      font-family: var(--mono);
+      font-size: .82rem
+    }
+
+    .quiz .opts button.right {
+      background: var(--ok-soft);
+      border-color: var(--ok)
+    }
+
+    .quiz .opts button.wrong {
+      background: var(--err-soft);
+      border-color: var(--err)
+    }
+
+    .quiz .fb {
+      margin-top: .5rem;
+      font-size: .88rem;
+      min-height: 1.2rem
+    }
+
+    .tabs {
+      display: flex;
+      gap: .3rem;
+      margin-bottom: .6rem;
+      flex-wrap: wrap
+    }
+
+    .tabs button.on {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent)
+    }
+
+    .diagram svg {
+      width: 100%;
+      height: auto
+    }
+
+    .diagram text {
+      fill: var(--fg);
+      font-family: system-ui, sans-serif
+    }
+
+    .diagram .box {
+      fill: var(--bg-soft);
+      stroke: var(--border)
+    }
+
+    .diagram .lane {
+      stroke: var(--border);
+      stroke-dasharray: 4 4
+    }
+
+    .katex-display {
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: .3rem 0
+    }
+
+    footer {
+      margin: 4rem 0 2rem;
+      color: var(--fg-muted);
+      font-size: .85rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem
+    }
+  </style>
+</head>
+
+<body>
+  <div class="tip" id="tip"></div>
+  <div class="layout">
+    <main>
+      <header class="title-block">
+        <h1>Ayudantía 1: Webscraping y APIs</h1>
+        <div class="title-meta">
+          <span>IMT2200 · Introducción a la Ciencia de Datos</span>
+          <div class="code-tools">
+            <button id="showAll" title="Mostrar todo el código">Mostrar código</button>
+            <button id="hideAll" title="Ocultar todo el código">Ocultar código</button>
+            <a class="btn" href="index.html" title="Todas las ayudantías">⌂ Inicio</a>
+            <a class="btn primary" href="ayudantia_2.html">Ir a Ayudantía 2 →</a>
+            <button id="themeBtn" title="Cambiar tema" aria-label="Cambiar tema">◐</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- ============================ 1 ============================ -->
+      <section id="intro">
+        <h2><span class="num">1</span> Introducción</h2>
+        <p>En esta ayudantía veremos cómo <b>obtener datos desde la web</b> con dos estrategias. La idea es entender
+          <em>qué pasa por debajo</em> cada vez que ejecutamos <code>requests.get(...)</code>.
+        </p>
+        <ol>
+          <li><b>Webscraping:</b> descargamos el HTML de una página y "recortamos" lo que nos interesa (sitio: <a
+              href="https://books.toscrape.com/" target="_blank" rel="noopener">books.toscrape.com</a>).</li>
+          <li><b>APIs:</b> pedimos los datos ya estructurados (JSON) a un servicio (API de la <a
+              href="https://climatologia.meteochile.gob.cl/" target="_blank" rel="noopener">Dirección Meteorológica de
+              Chile</a>).</li>
+        </ol>
+        <div class="diagram widget">
+          <div class="wh"><span class="tag">Mapa</span> El recorrido de la ayudantía</div>
+          <div class="wb">
+            <svg viewBox="0 0 760 170" role="img"
+              aria-label="Diagrama: dos caminos, webscraping y API, que terminan en un DataFrame">
+              <defs>
+                <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                  orient="auto-start-reverse">
+                  <path d="M0,0L10,5L0,10z" fill="var(--fg-muted)" />
+                </marker>
+              </defs>
+              <g font-size="12.5">
+                <rect class="box" x="10" y="60" width="110" height="46" rx="8" /><text x="65" y="81"
+                  text-anchor="middle" font-weight="600">Python</text><text x="65" y="97" text-anchor="middle"
+                  font-size="11" fill="var(--fg-muted)">requests.get()</text>
+                <rect class="box" x="190" y="12" width="150" height="46" rx="8" style="stroke:var(--tok-tag)" /><text
+                  x="265" y="33" text-anchor="middle" font-weight="600">Página web</text><text x="265" y="49"
+                  text-anchor="middle" font-size="11" fill="var(--fg-muted)">responde HTML</text>
+                <rect class="box" x="190" y="108" width="150" height="46" rx="8" style="stroke:var(--accent)" /><text
+                  x="265" y="129" text-anchor="middle" font-weight="600">API</text><text x="265" y="145"
+                  text-anchor="middle" font-size="11" fill="var(--fg-muted)">responde JSON</text>
+                <rect class="box" x="410" y="12" width="150" height="46" rx="8" /><text x="485" y="33"
+                  text-anchor="middle" font-weight="600">BeautifulSoup</text><text x="485" y="49" text-anchor="middle"
+                  font-size="11" fill="var(--fg-muted)">buscar tags / clases</text>
+                <rect class="box" x="410" y="108" width="150" height="46" rx="8" /><text x="485" y="129"
+                  text-anchor="middle" font-weight="600">dict de Python</text><text x="485" y="145" text-anchor="middle"
+                  font-size="11" fill="var(--fg-muted)">navegar llaves</text>
+                <rect class="box" x="630" y="60" width="120" height="46" rx="8" style="stroke:var(--ok)" /><text x="690"
+                  y="81" text-anchor="middle" font-weight="600">DataFrame</text><text x="690" y="97"
+                  text-anchor="middle" font-size="11" fill="var(--fg-muted)">análisis + gráficos</text>
+                <path d="M120,76 C160,76 150,35 188,35" fill="none" stroke="var(--fg-muted)" marker-end="url(#ar)" />
+                <path d="M120,92 C160,92 150,131 188,131" fill="none" stroke="var(--fg-muted)" marker-end="url(#ar)" />
+                <path d="M340,35 L408,35" stroke="var(--fg-muted)" marker-end="url(#ar)" />
+                <path d="M340,131 L408,131" stroke="var(--fg-muted)" marker-end="url(#ar)" />
+                <path d="M560,35 C600,35 590,76 628,76" fill="none" stroke="var(--fg-muted)" marker-end="url(#ar)" />
+                <path d="M560,131 C600,131 590,92 628,92" fill="none" stroke="var(--fg-muted)" marker-end="url(#ar)" />
+                <text x="12" y="40" font-size="11" fill="var(--tok-tag)">§4 Webscraping</text>
+                <text x="12" y="132" font-size="11" fill="var(--accent)">§5 APIs</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <p class="muted small">Cada sección incluye <b>widgets interactivos</b> (marcados con una etiqueta azul) para
+          experimentar con el mecanismo antes de ver el código. Los widgets funcionan <b>sin conexión</b>: simulan las
+          respuestas de los sitios reales.</p>
+      </section>
+
+      <!-- ============================ 2 ============================ -->
+      <section id="html">
+        <h2><span class="num">2</span> ¿Qué es HTML?</h2>
+        <div class="callout def">
+          <div class="ct">📘 Definición</div>
+          <p><b>HTML</b> (<em>HyperText Markup Language</em>) es el lenguaje de marcado que estructura el contenido de
+            una página web. Está formado por <b>etiquetas</b> (<code>&lt;h1&gt;</code>, <code>&lt;p&gt;</code>,
+            <code>&lt;div&gt;</code>, …) que se anidan unas dentro de otras y forman un <b>árbol</b>, llamado
+            <b>DOM</b>.
+          </p>
+        </div>
+
+        <p>No necesitamos conocer todas sus características, pero sí entender cómo se comporta. Veamos el ejemplo paso a
+          paso:</p>
+        <ol class="steps">
+          <li>Escribimos texto con <b>etiquetas</b>. Cada etiqueta abre (<code>&lt;p&gt;</code>) y cierra
+            (<code>&lt;/p&gt;</code>).</li>
+          <li>El navegador lee ese texto y construye un <b>árbol</b>: lo que está dentro de una etiqueta es su
+            <em>hijo</em>.
+          </li>
+          <li>Cada etiqueta puede tener <b>atributos</b>, de forma parecida a los atributos de un objeto en Python:
+            <ul>
+              <li><code>id</code>: identificador <b>único</b> del elemento.</li>
+              <li><code>class</code>: categoría que pueden compartir <b>muchos</b> elementos, por ejemplo
+                <code>class="price_color"</code>.
+              </li>
+              <li><code>href</code> / <code>src</code>: links o rutas de archivos.</li>
+              <li><code>style</code>: estilos CSS (fuera del alcance del curso).</li>
+            </ul>
+          </li>
+          <li>Al hacer scraping <b>recorremos ese árbol con código</b> en vez de leer la página con los ojos.</li>
+        </ol>
+
+        <div class="widget pg" id="w-html">
+          <div class="wh"><span class="tag">Interactivo</span> Editor de HTML → página → árbol (DOM)</div>
+          <div class="wb">
+            <p class="small muted" style="margin-top:0">Edita el HTML de la izquierda. Haz clic en un nodo del árbol
+              para ver dónde aparece en la página y qué atributos tiene.</p>
+            <div class="grid2">
+              <div class="pane">
+                <div class="ph"><span>HTML (texto)</span><button class="chip" id="htmlReset">reiniciar</button></div>
+                <textarea id="htmlSrc" spellcheck="false" aria-label="Código HTML editable"></textarea>
+              </div>
+              <div class="pane">
+                <div class="ph"><span>Lo que ve el navegador</span></div><iframe id="htmlOut"
+                  sandbox="allow-same-origin" title="Vista renderizada"></iframe>
+              </div>
+            </div>
+            <div class="pane" style="margin-top:.9rem">
+              <div class="ph"><span>Árbol DOM (lo que recorre BeautifulSoup)</span></div>
+              <div class="pb">
+                <div class="dom-tree" id="domTree"></div>
+                <div class="attr-box" id="attrBox"><span class="muted">← selecciona un nodo</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ 3 ============================ -->
+      <section id="http">
+        <h2><span class="num">3</span> Protocolos: HTTP y HTTPS</h2>
+        <div class="callout def">
+          <div class="ct">📘 Definición</div>
+          <p><b>HTTP</b> (<em>HyperText Transfer Protocol</em>) es el conjunto de reglas con que un <b>cliente</b> (tu
+            navegador o tu script de Python) le pide algo a un <b>servidor</b> (otro computador) y recibe una respuesta.
+            <b>HTTPS</b> es lo mismo, pero con el mensaje cifrado.
+          </p>
+        </div>
+        <p>Cada interacción ocurre así:</p>
+        <ol class="steps">
+          <li>El cliente envía una <b>solicitud (request)</b> con un <b>método</b> y una <b>URL</b>. El método indica la
+            intención:
+            <span class="pill">GET</span> pedir datos · <span class="pill">POST</span> enviar datos · <span
+              class="pill">PUT</span> actualizar · <span class="pill">DELETE</span> eliminar.
+          </li>
+          <li>El servidor la recibe, la procesa y decide qué responder.</li>
+          <li>Responde con un <b>código de estado</b> (¿salió bien?), <b>headers</b> (metadatos, como el tipo de
+            contenido) y un <b>cuerpo</b> (el HTML o el JSON).</li>
+          <li>El cliente procesa la respuesta: el navegador la dibuja y nuestro script la guarda en
+            <code>response</code>.
+          </li>
+        </ol>
+
+        <div class="widget" id="w-http">
+          <div class="wh"><span class="tag">Interactivo</span> Simulador de request → response</div>
+          <div class="wb">
+            <div class="row">
+              <label class="small" for="httpScenario">Escenario:</label>
+              <select id="httpScenario" style="flex:1;min-width:220px"></select>
+              <button class="primary" id="httpSend">Enviar request ▶</button>
+            </div>
+            <div class="http-stage" style="margin-top:.7rem">
+              <svg viewBox="0 0 700 120" id="httpSvg" aria-hidden="true">
+                <g font-size="13">
+                  <rect x="20" y="25" width="140" height="70" rx="10" class="box" fill="var(--bg-soft)"
+                    stroke="var(--border)" />
+                  <text x="90" y="55" text-anchor="middle" fill="var(--fg)" font-weight="600">Cliente</text>
+                  <text x="90" y="74" text-anchor="middle" fill="var(--fg-muted)" font-size="11">Python /
+                    navegador</text>
+                  <rect x="540" y="25" width="140" height="70" rx="10" fill="var(--bg-soft)" stroke="var(--border)"
+                    id="srvBox" />
+                  <text x="610" y="55" text-anchor="middle" fill="var(--fg)" font-weight="600">Servidor</text>
+                  <text x="610" y="74" text-anchor="middle" fill="var(--fg-muted)" font-size="11"
+                    id="srvHost">books.toscrape.com</text>
+                  <line x1="165" y1="45" x2="535" y2="45" stroke="var(--border)" stroke-dasharray="4 4" />
+                  <line x1="165" y1="78" x2="535" y2="78" stroke="var(--border)" stroke-dasharray="4 4" />
+                  <text x="350" y="38" text-anchor="middle" fill="var(--fg-muted)" font-size="11">request →</text>
+                  <text x="350" y="96" text-anchor="middle" fill="var(--fg-muted)" font-size="11">← response</text>
+                  <g id="pktReq" opacity="0">
+                    <rect x="-34" y="-11" width="68" height="22" rx="11" fill="var(--accent)" /><text
+                      text-anchor="middle" y="4" fill="#fff" font-size="11" font-weight="700" id="pktReqT">GET</text>
+                  </g>
+                  <g id="pktRes" opacity="0">
+                    <rect x="-34" y="-11" width="68" height="22" rx="11" fill="var(--ok)" id="pktResR" /><text
+                      text-anchor="middle" y="4" fill="#fff" font-size="11" font-weight="700" id="pktResT">200</text>
+                  </g>
+                </g>
+              </svg>
+            </div>
+            <div class="grid2" style="margin-top:.4rem">
+              <div class="pane">
+                <div class="ph"><span>Request (lo que enviamos)</span></div>
+                <div class="pb">
+                  <pre class="msg" id="reqMsg"></pre>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph"><span>Response (lo que recibimos)</span></div>
+                <div class="pb">
+                  <pre class="msg" id="resMsg"><span class="muted">Presiona «Enviar request»</span></pre>
+                </div>
+              </div>
+            </div>
+            <div class="pane" style="margin-top:.9rem">
+              <div class="ph"><span>En Python</span></div>
+              <div class="pb">
+                <pre class="msg" id="pyMsg" style="min-height:0"></pre>
+              </div>
+            </div>
+            <div class="status-legend" id="statusLegend">
+              <span data-c="2" style="border-color:var(--ok)">2xx · éxito</span>
+              <span data-c="3">3xx · redirección</span>
+              <span data-c="4" style="border-color:var(--warn)">4xx · error del cliente (nosotros)</span>
+              <span data-c="5" style="border-color:var(--err)">5xx · error del servidor</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="quiz" data-answer="1">
+          <div class="q">Pregunta rápida: haces <code>requests.get(url)</code> a una API sin incluir tu token y recibes
+            un <code>403</code>. ¿Qué significa?</div>
+          <div class="opts">
+            <button>El servidor está caído</button>
+            <button>El servidor entendió la solicitud, pero no nos autoriza</button>
+            <button>La página no existe</button>
+          </div>
+          <div class="fb"
+            data-ok="Correcto: los 4xx son errores «del lado del cliente». Aquí falta autenticarse con el token."
+            data-bad="Revisa la leyenda: los 5xx son caídas del servidor y 404 es «no existe». Un 403 significa «prohibido».">
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ 4 ============================ -->
+      <section id="scraping">
+        <h2><span class="num">4</span> Webscraping</h2>
+        <div class="callout def">
+          <div class="ct">📘 Definición</div>
+          <p><b>Webscraping</b> es la técnica para <b>extraer información de sitios web de forma automatizada</b> cuando
+            no existe otra forma de obtenerla (por ejemplo, una API). Consiste en (1) descargar el HTML con un
+            <code>GET</code> y (2) recorrer su árbol buscando etiquetas y atributos.
+          </p>
+        </div>
+
+        <p>Usaremos <code>requests</code> para descargar el HTML y <code>BeautifulSoup</code> para recorrerlo. El sitio
+          es <a href="https://books.toscrape.com/" target="_blank" rel="noopener">books.toscrape.com</a>, un catálogo de
+          1000 libros hecho para practicar.</p>
+
+        <details class="code-fold" open>
+          <summary>Mostrar/Ocultar código</summary>
+          <pre class="src py">import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+
+url = "https://books.toscrape.com/"
+response = requests.get(url)                       # 1. GET → recibimos el HTML como texto
+soup = BeautifulSoup(response.text, 'html.parser') # 2. texto → árbol navegable</pre>
+        </details>
+
+        <p>El objeto <code>soup</code> es el <b>árbol</b> de la sección 2. Lo que nos falta es saber <b>cómo pedirle</b>
+          los elementos que nos interesan.</p>
+
+        <h3 id="selectores"><span class="num">4.1</span>Buscar elementos: <code>find_all</code> y <code>select</code>
+        </h3>
+        <p>Para describir lo que buscamos tenemos dos "lenguajes" equivalentes:</p>
+        <div style="overflow-x:auto;margin:.5rem 0 1rem">
+          <table class="df" style="max-width:640px">
+            <thead>
+              <tr>
+                <th style="text-align:left">Quiero…</th>
+                <th style="text-align:left">find_all</th>
+                <th style="text-align:left">select (selector CSS)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="text-align:left">todas las etiquetas <code>&lt;h3&gt;</code></td>
+                <td style="text-align:left">find_all('h3')</td>
+                <td style="text-align:left">select('h3')</td>
+              </tr>
+              <tr>
+                <td style="text-align:left">elementos con <code>class="price_color"</code></td>
+                <td style="text-align:left">find_all(class_='price_color')</td>
+                <td style="text-align:left">select('.price_color')</td>
+              </tr>
+              <tr>
+                <td style="text-align:left">el elemento con <code>id="x"</code></td>
+                <td style="text-align:left">find(id='x')</td>
+                <td style="text-align:left">select('#x')</td>
+              </tr>
+              <tr>
+                <td style="text-align:left"><code>&lt;a&gt;</code> <b>dentro de</b> un <code>&lt;h3&gt;</code></td>
+                <td style="text-align:left">(dos pasos)</td>
+                <td style="text-align:left">select('h3 a')</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="widget" id="w-sel">
+          <div class="wh"><span class="tag">Interactivo</span> Laboratorio de selectores sobre una copia de
+            books.toscrape.com</div>
+          <div class="wb">
+            <div class="row">
+              <span class="mono small">soup.select("</span><input type="text" class="mono" id="selIn"
+                value="article.product_pod" style="flex:1;min-width:160px" aria-label="Selector CSS"><span
+                class="mono small">")</span>
+            </div>
+            <div class="row" style="margin-top:.5rem" id="selPresets"></div>
+            <div class="grid2" style="margin-top:.8rem">
+              <div class="pane">
+                <div class="ph"><span>Página renderizada</span><span id="selCount"></span></div>
+                <div class="pb" style="padding:0">
+                  <div class="mock" id="mock"></div>
+                </div>
+              </div>
+              <div class="pane">
+                <div class="ph"><span>HTML (response.text)</span></div>
+                <pre class="src-view" id="srcView"></pre>
+              </div>
+            </div>
+            <div class="pane" style="margin-top:.9rem">
+              <div class="ph"><span>Resultado en Python</span><span class="mono" id="selPy"></span></div>
+              <div class="pb">
+                <ol class="result-list" id="selRes" start="0"></ol>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout tip">
+          <div class="ct">💡 Para leer un selector</div>
+          <p>Se lee de izquierda a derecha: <code>p.star-rating</code> = "<b>un</b> <code>&lt;p&gt;</code> <b>que
+              tenga</b> la clase <code>star-rating</code>". Un <b>espacio</b> significa "dentro de":
+            <code>article.product_pod h3 a</code> = "los <code>&lt;a&gt;</code> que están dentro de un
+            <code>&lt;h3&gt;</code>, que a su vez está dentro de un <code>&lt;article class="product_pod"&gt;</code>".
+          </p>
+        </div>
+
+        <h3 id="extraer"><span class="num">4.2</span>De un <code>&lt;article&gt;</code> a una fila del DataFrame</h3>
+        <p>Con <code>soup.find_all('article', class_='product_pod')</code> obtenemos una lista con los 20 libros de la
+          página. Dentro del loop, para <b>cada</b> libro extraemos cuatro campos. Recorre el proceso línea por línea:
+        </p>
+
+        <div class="widget stepper" id="w-ext">
+          <div class="wh"><span class="tag">Paso a paso</span> Extraer los campos de un libro
+            <span style="margin-left:auto" class="row">
+              <label class="small" for="extBook">libro</label><select id="extBook"></select>
+              <label class="small" title="Cómo decodifica requests el texto">encoding</label>
+              <select id="extEnc">
+                <option value="latin">ISO-8859-1 (el de requests por defecto)</option>
+                <option value="utf8">UTF-8 (correcto)</option>
+              </select>
+            </span>
+          </div>
+          <div class="wb">
+            <div class="grid2">
+              <div>
+                <div id="extLines"></div>
+                <div class="row" style="margin-top:.6rem"><button id="extPrev">◀ Anterior</button><button
+                    class="primary" id="extNext">Siguiente ▶</button><button id="extReset">Reiniciar</button></div>
+              </div>
+              <div class="pane">
+                <div class="ph"><span>HTML de este libro</span></div>
+                <pre class="src-view" id="extSrc" style="max-height:300px"></pre>
+              </div>
+            </div>
+            <div class="valbox" id="extVal"></div>
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <div class="ct">⚠️ ¿Por qué <code>[2:]</code> en el precio?</div>
+          <p>books.toscrape no dice en qué <em>encoding</em> viene su HTML, así que <code>requests</code> asume
+            <code>ISO-8859-1</code>. El símbolo <code>£</code> (2 bytes en UTF-8) se lee como <b>dos</b> caracteres:
+            <code>Â£</code>. Por eso <code>[2:]</code> funciona… <b>por accidente</b>. Cambia el selector
+            <i>encoding</i> del widget a UTF-8 y mira qué pasa con el precio. Una alternativa más robusta es fijar
+            <code>response.encoding = 'utf-8'</code> y usar <code>.replace('£', '')</code>, o bien
+            <code>re.sub(r'[^\d.]', '', texto)</code>.
+          </p>
+        </div>
+
+        <details class="code-fold" open>
+          <summary>Mostrar/Ocultar código</summary>
+          <pre class="src py">book_elements = soup.find_all('article', class_='product_pod')
+
+books = []
+rating_c = {"One": 1, "Two": 2, "Three": 3, "Four": 4, "Five": 5}
+for book in book_elements:
+    titulo = book.h3.a['title']                                   # el texto visible viene cortado ("A Light in the ...")
+    precio = book.find('p', class_='price_color').text.strip()[2:]
+    stock  = book.find('p', class_='instock availability').text.strip()
+    rating = book.p['class'][1]                                   # ['star-rating', 'Three'] → 'Three'
+    books.append({'titulo': titulo, 'precio': float(precio),
+                  'stock': 'yes' if 'In stock' in stock else 'no',
+                  'rating': rating_c.get(rating, 0)})
+
+df = pd.DataFrame(books)
+df.head()</pre>
+        </details>
+        <pre class="out">                                titulo  precio stock  rating
+0                 A Light in the Attic   51.77   yes       3
+1                   Tipping the Velvet   53.74   yes       1
+2                            Soumission   50.10   yes       1
+3                        Sharp Objects   47.82   yes       4
+4  Sapiens: A Brief History of Humankind   54.23   yes       5</pre>
+
+        <h3 id="paginas"><span class="num">4.3</span>Más páginas: iterar sobre la URL</h3>
+        <p>Ya tenemos 20 libros… pero el sitio tiene <b>1000</b>. ¿Cómo obtenemos los otros 980? Fíjense en la URL de
+          cada página:</p>
+        <ol class="steps">
+          <li>La página 1 está en <code>https://books.toscrape.com/catalogue/page-1.html</code>.</li>
+          <li>Si cambiamos el número, llegamos a otra página: <code>page-2.html</code>, <code>page-3.html</code>, …</li>
+          <li>Entonces armamos la URL con un <b>f-string</b> dentro de un <code>for</code>, y a cada página le aplicamos
+            el proceso de 4.2.</li>
+          <li>Cada página es <b>un request más</b>: 50 páginas = 50 requests, por eso tarda bastante más.</li>
+        </ol>
+
+        <div class="widget" id="w-pag">
+          <div class="wh"><span class="tag">Interactivo</span> El loop de paginación</div>
+          <div class="wb">
+            <div class="row">
+              <span class="small">i =</span><input type="range" id="pagI" min="1" max="51" value="1"
+                style="flex:1;min-width:160px" aria-label="Número de página">
+              <span class="pill" id="pagIv">1</span>
+            </div>
+            <div class="url-out" style="margin-top:.6rem" id="pagUrl"></div>
+            <div class="row" style="margin-top:.4rem"><span class="small muted">respuesta:</span><span
+                id="pagStatus"></span></div>
+            <hr style="border:0;border-top:1px solid var(--border);margin:1rem 0">
+            <div class="row">
+              <button class="primary" id="pagRun">Ejecutar <span class="mono">for i in range(1, 51)</span></button>
+              <button id="pagStop" disabled>Detener</button>
+              <label class="small row" style="gap:.3rem"><input type="checkbox" id="pagFast" checked> acelerar
+                ×20</label>
+            </div>
+            <div class="row" style="margin-top:.7rem">
+              <div class="stat"><b id="pagReq">0</b><span>requests</span></div>
+              <div class="stat"><b id="pagRows">0</b><span>filas en df</span></div>
+              <div class="stat"><b id="pagTime">0.0 s</b><span>tiempo (simulado)</span></div>
+            </div>
+            <div class="prog" style="margin-top:.7rem">
+              <div id="pagBar"></div>
+            </div>
+            <div class="log" id="pagLog"><span class="muted">El log de cada request aparecerá aquí.</span></div>
+          </div>
+        </div>
+
+        <details class="code-fold" open>
+          <summary>Mostrar/Ocultar código</summary>
+          <pre class="src py">new_books = []
+for i in range(1, 51):
+    url = f"https://books.toscrape.com/catalogue/page-{i}.html"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    for book in soup.find_all('article', class_='product_pod'):
+        ...  # mismo proceso que en 4.2
+        new_books.append({...})
+
+df_2 = pd.DataFrame(new_books)
+df_2.shape</pre>
+        </details>
+        <pre class="out">(1000, 4)</pre>
+
+        <div class="callout tip">
+          <div class="ct">💡 Buenas prácticas</div>
+          <p>Si hacemos muchos requests seguidos, conviene revisar <code>response.status_code == 200</code> antes de
+            parsear y agregar una pausa (<code>time.sleep(0.5)</code>) para no saturar el servidor. En sitios reales,
+            revisen además el archivo <code>/robots.txt</code> y los términos de uso.</p>
+        </div>
+
+        <h3 id="categorias"><span class="num">4.4</span>Ejercicio: agregar la categoría</h3>
+        <p>Para agregar la columna <code>categoria</code>, la estrategia es:</p>
+        <ol class="steps">
+          <li>Sacar los links de las categorías desde el menú lateral:
+            <code>soup.find('ul', class_='nav nav-list').find_all('a')</code>. Pruébalo en el laboratorio de 4.1 con el
+            selector <code>ul.nav-list a</code>.
+          </li>
+          <li>Armar un diccionario <code>{nombre: link}</code> y quitar la entrada <code>'Books'</code>, que es la raíz.
+          </li>
+          <li>Para cada categoría, averiguar <b>cuántas páginas</b> tiene. Si existe <code>ul.pager</code>, el texto de
+            <code>li.current</code> dice <code>"Page 1 of N"</code>.
+          </li>
+          <li>Iterar sobre las páginas de cada categoría, igual que en 4.3.</li>
+        </ol>
+
+        <div class="widget" id="w-pager">
+          <div class="wh"><span class="tag">Interactivo</span> Leer <code>N</code> desde «Page 1 of N»</div>
+          <div class="wb">
+            <div class="row"><span class="small">Páginas de la categoría N =</span><input type="range" id="pgN" min="1"
+                max="25" value="8" style="flex:1;min-width:140px" aria-label="Número total de páginas"><span
+                class="pill" id="pgNv">8</span></div>
+            <div class="url-out" style="margin-top:.6rem">texto = <span class="tk-s" id="pgTxt"></span></div>
+            <table class="df" style="margin-top:.7rem">
+              <thead>
+                <tr>
+                  <th style="text-align:left">Código</th>
+                  <th style="text-align:left">Resultado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="pgBody"></tbody>
+            </table>
+            <p class="small muted" style="margin-bottom:0"> <code>text.strip()[-1]</code>, toma <b>solo el último
+                carácter</b>. Mueve el slider a 10 o más y observa qué pasa.</p>
+          </div>
+        </div>
+
+        <div class="quiz" data-answer="2">
+          <div class="q">Pregunta rápida: ¿qué devuelve <code>soup.select(".product_pod h3 a")[0]['title']</code> en la
+            portada?</div>
+          <div class="opts">
+            <button>"A Light in the ..."</button>
+            <button>"catalogue/a-light-in-the-attic_1000/index.html"</button>
+            <button>"A Light in the Attic"</button>
+          </div>
+          <div class="fb"
+            data-ok="Correcto: el atributo title trae el nombre completo, mientras que .text trae el texto visible, que viene cortado."
+            data-bad="Ojo: ['title'] lee el atributo title. El texto visible (.text) viene cortado y href es el link.">
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ 5 ============================ -->
+      <section id="apis">
+        <h2><span class="num">5</span> APIs</h2>
+        <div class="callout def">
+          <div class="ct">📘 Definición</div>
+          <p>Una <b>API</b> (<em>Application Programming Interface</em>) es una "puerta" que un servicio deja abierta
+            para que <b>otros programas</b> le pidan datos ya estructurados (normalmente en <b>JSON</b>), sin pasar por
+            el HTML pensado para humanos. Cada URL que responde algo distinto es un <b>endpoint</b>.</p>
+        </div>
+
+        <div class="grid2" style="margin:1rem 0">
+          <div class="pane">
+            <div class="ph"><span>Webscraping: el dato está "escondido" en HTML</span></div>
+            <div class="pb">
+              <pre class="msg" style="min-height:0" id="cmpHtml"></pre>
+            </div>
+          </div>
+          <div class="pane">
+            <div class="ph"><span>API: el dato viene listo en JSON</span></div>
+            <div class="pb">
+              <pre class="msg" style="min-height:0" id="cmpJson"></pre>
+            </div>
+          </div>
+        </div>
+        <p>Un JSON se comporta exactamente como <b>diccionarios y listas de Python</b>. <code>response.json()</code> lo
+          transforma directamente en un <code>dict</code>.</p>
+
+        <h3 id="url"><span class="num">5.1</span>Anatomía de una llamada y el token</h3>
+        <p>La API de MeteoChile requiere <b>registro</b> (<a
+            href="https://climatologia.meteochile.gob.cl/application/usuario/registroUsuario" target="_blank"
+            rel="noopener">aquí</a>). Al registrarte te entregan un <b>usuario</b> y un <b>token</b>, que viajan en la
+          URL como parámetros. Construye la URL:</p>
+
+        <div class="widget" id="w-url">
+          <div class="wh"><span class="tag">Interactivo</span> Constructor de URL</div>
+          <div class="wb">
+            <div class="form-grid">
+              <label for="uEndpoint">endpoint</label>
+              <select id="uEndpoint">
+                <option value="cat">geoservicios/getCatastroEstacionesGeo — lista de estaciones</option>
+                <option value="agua" selected>serviciosb/getAguaCaidaDiaria/{codigo} — lluvia diaria</option>
+              </select>
+              <label for="uCode">codigo estación</label>
+              <select id="uCode">
+                <option value="330020">330020 — Santiago, Quinta Normal</option>
+                <option value="{codigo}">{codigo} — variable del loop</option>
+              </select>
+              <label for="uUser">USUARIO</label><input type="text" id="uUser" class="mono" value="mi_correo@uc.cl">
+              <label for="uTok">API_KEY</label><input type="password" id="uTok" class="mono" value="a1b2c3d4e5f6">
+            </div>
+            <div class="url-out" id="uOut"></div>
+            <div class="u-legend">
+              <span class="u-scheme">protocolo</span><span class="u-host">servidor (host)</span><span
+                class="u-path">ruta / endpoint</span><span class="u-param">parámetro de ruta</span><span
+                class="u-query">query params (?clave=valor&amp;…)</span>
+            </div>
+            <div class="tabs" style="margin-top:.9rem"><button class="on" data-t="bad">❌ token en el
+                notebook</button><button data-t="good">✅ token en .env</button></div>
+            <div id="uCode2"></div>
+          </div>
+        </div>
+
+        <h3 id="json"><span class="num">5.2</span>Navegar un JSON anidado</h3>
+        <p>El endpoint <code>getAguaCaidaDiaria</code> devuelve un JSON con varios niveles de anidación. Lo que buscamos
+          está en <code>datosHistoricos → diaria</code>, organizado como <b>año → mes → día → valores</b>. Cada día
+          trae:</p>
+        <ul>
+          <li><code>total</code>: agua caída en el día (requiere todas las observaciones del día).</li>
+          <li><code>parcial</code>: lo mismo, pero sin importar cuántas observaciones haya.</li>
+          <li><code>traza</code>: mayor que 0 indica lluvia menor a 0.1 mm.</li>
+        </ul>
+
+        <div class="widget" id="w-json">
+          <div class="wh"><span class="tag">Interactivo</span> Explorador de JSON → ¿cómo accedo a este valor?</div>
+          <div class="wb">
+            <p class="small muted" style="margin-top:0">Haz clic en cualquier llave para ver el código Python que llega
+              hasta ella. Con ▸/▾ abres o cierras niveles. (JSON simplificado con valores de ejemplo.)</p>
+            <div class="grid2">
+              <div class="pane">
+                <div class="ph"><span>data_santiago = response.json()</span></div>
+                <div class="pb jtree" id="jTree"></div>
+              </div>
+              <div>
+                <div class="levels" id="jLevels"></div>
+                <div class="access" id="jAccess"><span class="muted">← elige una llave</span></div>
+                <div class="valbox" id="jVal"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3 id="aplanar"><span class="num">5.3</span>Aplanar: de JSON anidado a DataFrame</h3>
+        <p>Un DataFrame necesita <b>una fila por observación</b>, que aquí es un día. Tenemos dos caminos:</p>
+        <ol class="steps">
+          <li><b>Recorrer la jerarquía</b> con tres <code>for</code> anidados y armar una fila por día.</li>
+          <li><b>Aplanar con <code>pd.json_normalize</code>, pero desde el nivel correcto</b> (recomendado). Si se lo
+            aplicamos
+            a <code>data_santiago</code> completo, aplana <b>todo</b> en columnas y quedamos con 1 fila y miles de
+            columnas (en el notebook, 33.431) mezcladas con metadatos de la estación. Si se lo aplicamos a un
+            <b>nivel inferior</b> (<code>diaria</code>), cada nombre de columna queda como
+            <code>año.mes.día.campo</code>.
+            Con eso basta separar ese nombre y reorganizar.
+          </li>
+        </ol>
+        <p>Compara ambos caminos en el widget (pestañas arriba a la derecha):</p>
+
+        <div class="widget stepper" id="w-flat">
+          <div class="wh"><span class="tag">Paso a paso</span> json_normalize vs. loop anidado
+            <span class="tabs" style="margin:0 0 0 auto"><button class="on" data-m="loop">3 × for</button><button
+                data-m="norm">pd.json_normalize</button></span>
+          </div>
+          <div class="wb">
+            <div id="flatNorm" hidden>
+              <p class="small" style="margin-top:0"><b>1. ¿Desde qué nivel aplanamos?</b> Elige qué le pasamos a
+                <code>pd.json_normalize(...)</code>:
+              </p>
+              <div class="row" id="normLevels"></div>
+              <div
+                style="overflow:auto;max-height:150px;border:1px solid var(--border);border-radius:6px;margin-top:.6rem">
+                <table class="df" id="normTbl"></table>
+              </div>
+              <p class="small" id="normInfo"></p>
+              <div id="normSteps">
+                <p class="small" style="margin-bottom:.3rem"><b>2. De "1 fila ancha" a "1 fila por día"</b>: los nombres
+                  de columna ya contienen <code>año.mes.día.campo</code>, solo hay que reorganizarlos.</p>
+                <div class="grid2">
+                  <div>
+                    <div class="step-line" data-n="0">plano = pd.json_normalize(diaria)<span
+                        class="tk-k">.iloc</span>[<span class="tk-n">0</span>]</div>
+                    <div class="step-line" data-n="1">plano.index = plano.index.str.split(<span class="tk-s">'.'</span>,
+                      expand=<span class="tk-k">True</span>)<br>&nbsp;&nbsp;&nbsp;&nbsp;.set_names([<span
+                        class="tk-s">'año'</span>, <span class="tk-s">'mes'</span>, <span class="tk-s">'día'</span>,
+                      <span class="tk-s">'campo'</span>])
+                    </div>
+                    <div class="step-line" data-n="2">df2 = plano.unstack(<span
+                        class="tk-s">'campo'</span>).reset_index()</div>
+                    <div class="step-line" data-n="3">df2 = df2.astype({<span class="tk-s">'año'</span>: int, <span
+                        class="tk-s">'mes'</span>: int, <span class="tk-s">'día'</span>:
+                      int})<br>&nbsp;&nbsp;&nbsp;&nbsp;.sort_values([<span class="tk-s">'año'</span>, <span
+                        class="tk-s">'mes'</span>, <span class="tk-s">'día'</span>], ignore_index=<span
+                        class="tk-k">True</span>)</div>
+                    <div class="row" style="margin-top:.5rem"><button id="normPrev">◀ Anterior</button><button
+                        class="primary" id="normNext">Siguiente paso ▶</button></div>
+                  </div>
+                  <div class="valbox small" id="normExplain" style="margin-top:0"></div>
+                </div>
+                <div class="pane" style="margin-top:.9rem">
+                  <div class="ph"><span id="normStepTitle"></span><span id="normStepShape"></span></div>
+                  <div class="pb" style="max-height:240px;padding:0">
+                    <table class="df" id="normStepTbl"></table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="flatLoop">
+              <div class="grid2">
+                <div>
+                  <div class="step-line" data-l="0"><span class="tk-k">for</span> year, months <span
+                      class="tk-k">in</span> diaria.items():</div>
+                  <div class="step-line" data-l="1">&nbsp;&nbsp;&nbsp;&nbsp;<span class="tk-k">for</span> month, days
+                    <span class="tk-k">in</span> months.items():
+                  </div>
+                  <div class="step-line" data-l="2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                      class="tk-k">for</span> day, valores <span class="tk-k">in</span> days.items():</div>
+                  <div class="step-line" data-l="3">
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rows.append({...})</div>
+                  <div class="levels" id="flatVars" style="margin-top:.6rem"></div>
+                  <div class="row" style="margin-top:.4rem"><button class="primary" id="flatNext">Siguiente iteración
+                      ▶</button><button id="flatAll">Hasta el final ⏭</button><button id="flatReset">Reiniciar</button>
+                  </div>
+                </div>
+                <div class="pane">
+                  <div class="ph"><span>diaria</span></div>
+                  <div class="pb jtree" id="flatTree" style="max-height:240px"></div>
+                </div>
+              </div>
+              <div class="pane" style="margin-top:.9rem">
+                <div class="ph"><span>df2 = pd.DataFrame(rows)</span><span id="flatShape"></span></div>
+                <div class="pb" style="max-height:220px;padding:0">
+                  <table class="df" id="flatTbl"></table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <details class="code-fold" open>
+          <summary>Mostrar/Ocultar código</summary>
+          <pre class="src py">diaria = data_santiago["datosHistoricos"]["diaria"]
+
+def crear_df_estacion(diaria):
+    rows = []
+    for year, months in diaria.items():
+        for month, days in months.items():
+            for day, valores in days.items():
+                rows.append({"año": int(year), "mes": int(month), "día": int(day),
+                             "parcial": valores["parcial"],
+                             "total": valores["total"],
+                             "traza": valores["traza"]})
+    return pd.DataFrame(rows)
+
+df2 = crear_df_estacion(diaria)
+
+# --- recomendado: json_normalize desde un nivel inferior ---
+plano = pd.json_normalize(diaria).iloc[0]          # Serie: '2023.6.21.total' → 18.4
+plano.index = plano.index.str.split('.', expand=True).set_names(['año', 'mes', 'día', 'campo'])
+df2 = (plano.unstack('campo')                       # 'campo' pasa a columnas
+            .reset_index()
+            .astype({'año': int, 'mes': int, 'día': int})
+            .sort_values(['año', 'mes', 'día'], ignore_index=True))   # unstack ordenó como texto: '10' &lt; '2'</pre>
+        </details>
+
+        <div class="callout tip">
+          <div class="ct">💡 ¿Cuál conviene? → <code>json_normalize</code> desde <code>diaria</code></div>
+          <p>Las dos llegan al <b>mismo DataFrame</b>, pero <code>json_normalize</code> lo hace en 3 líneas, sin loops
+            anidados
+            ni diccionarios armados a mano. Hay menos lugares donde equivocarse y se lee mejor. El truco es elegir
+            <b>el nivel</b>: aplicado a <code>diaria</code>, el nombre de cada columna ya trae
+            <code>año.mes.día.campo</code>.
+          </p>
+          <p class="small muted">Es algo más lento (del orden de milisegundos por estación), pero a esta escala no se
+            nota.
+            Igual conviene entender el loop: es lo que <code>json_normalize</code> hace por dentro.</p>
+        </div>
+      </section>
+
+      <!-- ============================ 6 ============================ -->
+      <section id="pipeline">
+        <h2><span class="num">6</span> De la API al mapa</h2>
+        <p>Ahora juntamos todo para responder: <b>¿qué zonas de Chile son más lluviosas?</b></p>
+
+        <h3 id="descarga"><span class="num">6.1</span>Descargar todas las estaciones (y guardar en disco)</h3>
+        <ol class="steps">
+          <li>Con <code>getCatastroEstacionesGeo</code> obtenemos la lista de estaciones (nombre, código, latitud,
+            longitud y región).</li>
+          <li>Recorremos los códigos y llamamos a <code>getAguaCaidaDiaria/{codigo}</code> una vez por estación.</li>
+          <li>Guardamos cada respuesta en <code>data/&lt;estacion&gt;_data.json</code>. Así <b>no repetimos</b> los 3 a
+            4 minutos de requests cada vez que reiniciamos el kernel.</li>
+          <li>Al leer los archivos usamos <code>try/except</code>: muchas estaciones no tienen datos y su JSON no trae
+            <code>"datosHistoricos"</code> (<code>KeyError</code>).
+          </li>
+        </ol>
+
+        <div class="widget" id="w-dl">
+          <div class="wh"><span class="tag">Interactivo</span> Simulación del loop con tqdm</div>
+          <div class="wb">
+            <div class="row"><button class="primary" id="dlRun">Ejecutar descarga</button><button
+                id="dlReset">Reiniciar</button></div>
+            <div class="mono small" style="margin-top:.6rem" id="dlTqdm">0%| | 0/0</div>
+            <div class="prog" style="margin-top:.3rem">
+              <div id="dlBar"></div>
+            </div>
+            <div class="row" style="margin-top:.7rem">
+              <div class="stat"><b id="dlOk">0</b><span>con datos</span></div>
+              <div class="stat"><b id="dlErr">0</b><span>KeyError → log</span></div>
+              <div class="stat"><b id="dlFiles">0</b><span>archivos en data/</span></div>
+            </div>
+            <div class="log" id="dlLog"><span class="muted">…</span></div>
+          </div>
+        </div>
+
+        <details class="code-fold">
+          <summary>Mostrar/Ocultar código</summary>
+          <pre class="src py">os.makedirs("data", exist_ok=True)          # fuera del loop
+
+for nombre, codigo in tqdm.tqdm(estacion_codigo.items()):
+    url = f".../getAguaCaidaDiaria/{codigo}?usuario={USUARIO}&amp;token={API_KEY}"
+    r = requests.get(url)
+    with open(f"data/{nombre.replace(' ', '_')}_data.json", "w") as f:
+        json.dump(r.json(), f, indent=4)
+
+estaciones = {}
+for nombre, codigo in estacion_codigo.items():
+    with open(f"data/{nombre.replace(' ', '_')}_data.json") as f:
+        try:
+            diaria = json.load(f)["datosHistoricos"]["diaria"]
+            estaciones[codigo] = crear_df_estacion(diaria)
+        except KeyError as ke:
+            with open("data/error_log.txt", "a") as log:
+                log.write(f"Falta la clave {ke} en {nombre}\n")</pre>
+        </details>
+
+        <h3 id="promedio"><span class="num">6.2</span>Promedio por estación: ¿diario o anual?</h3>
+        <p>Con <code>df['total'].mean()</code> calculamos el promedio de la columna <code>total</code>. Pero cada fila
+          es <b>un día</b>, así que eso es el <b>promedio diario</b>:</p>
+        <p>$$\bar{x}_{\text{diario}} = \frac{1}{n}\sum_{d=1}^{n} \text{total}_d$$</p>
+        <p>$$\bar{x}_{\text{anual}} = \frac{1}{|A|}\sum_{a\in A}\;\sum_{d \in a} \text{total}_d \;\approx\; 365\cdot
+          \bar{x}_{\text{diario}}$$</p>
+        <p class="small muted">donde \(n\) es el número de días con datos y \(A\) es el conjunto de años.</p>
+        <p>Las dos métricas ordenan las estaciones de la misma forma, pero la escala y la interpretación cambian. Es
+          importante que el título del gráfico diga cuál se calculó.</p>
+
+        <div class="widget" id="w-map">
+          <div class="wh"><span class="tag">Interactivo</span> Precipitación por estación
+            <span class="tabs" style="margin:0 0 0 auto"><button class="on" data-m="d">media diaria
+                (mm/día)</button><button data-m="a">acumulado anual (mm/año)</button></span>
+          </div>
+          <div class="wb">
+            <div class="mapwrap">
+              <svg class="map" id="stMap" aria-label="Mapa de Chile con estaciones"></svg>
+              <div>
+                <div class="bars" id="stBars"></div>
+                <div class="scale"><span id="stMin"></span>
+                  <div class="ramp" id="stRamp"></div><span id="stMax"></span>
+                </div>
+                <p class="small muted">Pasa el mouse sobre un punto o una barra. Los valores son <b>aproximados</b> y
+                  sirven para ilustrar; los de verdad salen de la API.</p>
+                <pre class="src py" id="stCode" style="font-size:12.5px"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3 id="nan"><span class="num">6.3</span>Consideraciones sobre <code>NaN</code></h3>
+        <p>Para encontrar el día más lluvioso de cada año, podriamos escribir
+          <code>df[df['año']==i]['total'].max()</code> para cada estación. Si una estación <b>no tiene datos ese
+            año</b>, el resultado es <code>NaN</code>. Luego se aplica <code>max()</code> de Python sobre esos valores,
+          y ahí aparece la trampa:
+        </p>
+        <ol class="steps">
+          <li><code>max()</code> parte con el primer elemento como "mejor" y compara cada siguiente con
+            <code>x &gt; mejor</code>.
+          </li>
+          <li><b>Cualquier comparación con <code>NaN</code> da <code>False</code></b>: <code>5 &gt; nan</code> es
+            <code>False</code> y <code>nan &gt; 5</code> también.
+          </li>
+          <li>Si <code>NaN</code> queda primero, nadie le "gana" y <code>max()</code> devuelve <code>nan</code>. Si
+            aparece después, se ignora. <b>El resultado depende del orden.</b></li>
+        </ol>
+
+        <div class="widget" id="w-nan">
+          <div class="wh"><span class="tag">Interactivo</span> Ejecutar <code>max()</code> paso a paso</div>
+          <div class="wb">
+            <div class="row"><button id="nanShuffle">🔀 Mezclar orden</button><button id="nanFirst">NaN
+                primero</button><button class="primary" id="nanStep">Paso ▶</button><button id="nanRun">Ejecutar
+                todo</button></div>
+            <div class="chips" id="nanChips"></div>
+            <div class="valbox" id="nanTrace"></div>
+            <div class="grid2" style="margin-top:.6rem">
+              <div class="access">max(valores) → <b id="nanPy">?</b></div>
+              <div class="access">pd.Series(valores).max() → <b id="nanPd">?</b> <span
+                  class="muted small">(skipna=True)</span></div>
+            </div>
+          </div>
+        </div>
+
+        <h3 id="desafio"><span class="num">6.4</span>Extensiones: mapa por región y año</h3>
+        <p>Para lograr las visualizaciones anteriores, lo que se hace es es unir el <code>.shp</code> de regiones con el
+          promedio de los últimos cinco años de cada región. El
+          proceso:</p>
+        <ol class="steps">
+          <li>Agregar a cada fila diaria la región de su estación (merge con el catastro por
+            <code>CodigoNacional</code>).
+          </li>
+          <li>Agrupar con <code>groupby(['region', 'año'])</code>, sumar el total anual por estación y luego promediar
+            entre estaciones.</li>
+          <li>Pivotear para tener una columna por año (<code>2020 … 2024</code>).</li>
+          <li>Hacer el merge con el GeoDataFrame de regiones por nombre y graficar con <code>.plot(column=...)</code>.
+          </li>
+        </ol>
+
+        <div class="widget" id="w-choro">
+          <div class="wh"><span class="tag">Interactivo</span> Mapa coroplético (datos simulados, como en el notebook)
+          </div>
+          <div class="wb">
+            <div class="row"><span class="small">año</span><input type="range" id="chY" min="2020" max="2024"
+                value="2024" style="flex:1;min-width:140px" aria-label="Año"><span class="pill"
+                id="chYv">2024</span><button id="chPlay">▶ Animar</button></div>
+            <div class="mapwrap" style="margin-top:.7rem">
+              <svg class="map" id="chMap" aria-label="Mapa coroplético de regiones"></svg>
+              <div>
+                <div class="bars" id="chBars"></div>
+                <div class="scale"><span>0</span>
+                  <div class="ramp" id="chRamp"></div><span id="chMax"></span><span>mm/año</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <details class="code-fold">
+          <summary>Mostrar/Ocultar código (una solución posible)</summary>
+          <pre class="src py">frames = []
+for codigo, df in estaciones.items():
+    df = df.assign(CodigoNacional=codigo)
+    frames.append(df[df['año'].between(2020, 2024)])
+diario = pd.concat(frames)
+
+meta = data_inicial[['features.properties.CodigoNacional', 'features.properties.NumeroRegion']]
+meta.columns = ['CodigoNacional', 'region']
+diario = diario.merge(meta, on='CodigoNacional')
+
+anual = (diario.groupby(['region', 'CodigoNacional', 'año'])['total'].sum()   # mm/año por estación
+               .groupby(['region', 'año']).mean()                             # promedio entre estaciones
+               .unstack('año'))                                               # una columna por año
+
+chile_anual = chile.merge(anual, left_on='region', right_index=True)          # requiere mapear nombre ↔ número de región
+chile_anual.plot(column=2024, cmap='Blues', legend=True)</pre>
+        </details>
+      </section>
+
+      <!-- ============================ 7 ============================ -->
+      <section id="practica">
+        <h2><span class="num">7</span> Para practicar</h2>
+        <ol>
+          <li>Completar el scraping por <b>categoría</b> (4.4), leyendo <code>N</code> de forma robusta, y graficar
+            cuántos libros hay por categoría.</li>
+          <li>Resolver el desafío 6.4 con datos reales y animar el mapa entre 2020 y 2024.</li>
+        </ol>
+      </section>
+
+      <section id="conclusion">
+        <h2><span class="num">8</span> Conclusión</h2>
+        <ul>
+          <li><b>HTML</b> es un árbol de etiquetas con atributos. Hacer scraping es <b>recorrer ese árbol</b> con
+            <code>find_all</code> o <code>select</code>.
+          </li>
+          <li><b>HTTP</b>: cada <code>requests.get</code> es un request con su propio código de estado. Hay que
+            revisarlo antes de procesar la respuesta.</li>
+          <li>Para obtener muchos datos hay que <b>iterar sobre URLs</b> (páginas, categorías, estaciones), cuidando el
+            tiempo y los errores.</li>
+          <li>Una <b>API</b> entrega JSON [en general], que en Python es un dict. Hay que entender su jerarquía para
+            <b>aplanarla</b>
+            a un DataFrame.
+          </li>
+          <li>Las credenciales van en un <code>.env</code>, nunca en el notebook.</li>
+          <li>Hay que <b>saber qué se calcula</b>: un promedio diario no es un promedio anual, y <code>max()</code> de
+            Python no sabe manejar <code>NaN</code>.</li>
+        </ul>
+      </section>
+
+      <footer>IMT2200 · Ayudantía 1 · 2026</code>.
+      </footer>
+    </main>
+
+    <nav class="toc" aria-label="Contenido">
+      <h5>En esta página</h5>
+      <ul id="tocList"></ul>
+    </nav>
+  </div>
+
+  <script>
+    /* ======================================================= utilidades */
+    const $ = (s, r = document) => r.querySelector(s);
+    const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const tip = $('#tip');
+    function showTip(e, html) { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY + 12) + 'px'; }
+    function hideTip() { tip.style.opacity = 0; }
+
+    /* ---------- resaltado de sintaxis Python / HTML ---------- */
+    const PY_KW = new Set('False None True and as break class continue def del elif else except finally for from if import in is lambda not or pass raise return try while with yield'.split(' '));
+    const PY_BI = new Set('print len range int float str dict list sorted max min sum zip open enumerate type'.split(' '));
+    function hlPy(code) {
+      const re = /(#[^\n]*)|([fFrRbB]?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d+(?:\.\d+)?\b)|([A-Za-z_][A-Za-z0-9_]*)/g;
+      let out = '', last = 0, m;
+      while ((m = re.exec(code))) {
+        out += esc(code.slice(last, m.index)); last = re.lastIndex;
+        if (m[1]) out += `<span class="tk-c">${esc(m[1])}</span>`;
+        else if (m[2]) out += `<span class="tk-s">${esc(m[2])}</span>`;
+        else if (m[3]) out += `<span class="tk-n">${m[3]}</span>`;
+        else if (PY_KW.has(m[4])) out += `<span class="tk-k">${m[4]}</span>`;
+        else if (PY_BI.has(m[4]) || code[re.lastIndex] === '(') out += `<span class="tk-f">${m[4]}</span>`;
+        else out += esc(m[4]);
+      }
+      return out + esc(code.slice(last));
+    }
+    function hlHtml(line) {
+      return esc(line).replace(/(&lt;\/?)([a-zA-Z0-9]+)((?:\s+[^&]*?)?)(\/?&gt;)/g, (_, a, t, attrs, z) =>
+        `${a}<span class="tk-t">${t}</span>${attrs.replace(/([\w-]+)=(&quot;|")(.*?)\2/g, (_, k, q, v) => `<span class="tk-a">${k}</span>=<span class="tk-s">"${v}"</span>`)}${z}`);
+    }
+    $$('pre.src.py').forEach(p => p.innerHTML = hlPy(p.textContent));
+
+    /* ---------- mostrar/ocultar código, tema, TOC ---------- */
+    $('#showAll').onclick = () => $$('details.code-fold').forEach(d => d.open = true);
+    $('#hideAll').onclick = () => $$('details.code-fold').forEach(d => d.open = false);
+    (function () {
+      let saved = null; try { saved = localStorage.getItem('ayud1-theme'); } catch (e) { }
+      if (saved) document.documentElement.dataset.theme = saved;
+      $('#themeBtn').onclick = () => {
+        const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const nx = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = nx;
+        try { localStorage.setItem('ayud1-theme', nx); } catch (e) { }
+        refreshColors();
+      };
+    })();
+    (function () {
+      const ul = $('#tocList'); let sub = null;
+      $$('main h2, main h3').forEach(h => {
+        const sec = h.closest('section'); const id = h.id || sec.id;
+        if (!h.id && h.tagName === 'H2') h.id = sec.id + '-h';
+        const li = document.createElement('li');
+        // número y texto por separado, unidos con un espacio (sirve aunque el título no tenga espacio después del número)
+        const num = h.querySelector('.num') ? h.querySelector('.num').textContent.trim() : '';
+        const copia = h.cloneNode(true); if (copia.querySelector('.num')) copia.querySelector('.num').remove();
+        const texto = copia.innerHTML.replace(/<\/?code>/g, '').replace(/\s+/g, ' ').trim();
+        li.innerHTML = `<a href="#${h.id}">${num ? num + ' ' : ''}${texto}</a>`;
+        if (h.tagName === 'H2') { ul.appendChild(li); sub = document.createElement('ul'); li.appendChild(sub); }
+        else sub.appendChild(li);
+      });
+      const links = $$('#tocList a');
+      const io = new IntersectionObserver(es => es.forEach(e => {
+        if (e.isIntersecting) { links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id)); }
+      }), { rootMargin: '0px 0px -75% 0px' });
+      $$('main h2, main h3').forEach(h => io.observe(h));
+    })();
+
+    /* ---------- quizzes ---------- */
+    $$('.quiz').forEach(q => {
+      const ans = +q.dataset.answer, fb = $('.fb', q);
+      $$('.opts button', q).forEach((b, i) => b.onclick = () => {
+        $$('.opts button', q).forEach(x => x.classList.remove('right', 'wrong'));
+        b.classList.add(i === ans ? 'right' : 'wrong');
+        fb.textContent = i === ans ? '✅ ' + fb.dataset.ok : '❌ ' + fb.dataset.bad;
+      });
+    });
+
+    /* ======================================================= §2 HTML playground */
+    const HTML_DEFAULT = `<div id="contenido">
+  <h1>Hola mundo</h1>
+  <p class="intro">Este es un párrafo con un
+    <a href="https://www.wikipedia.org">link</a>.
+  </p>
+  <p class="precio" style="color:green">£51.77</p>
+</div>`;
+    (function () {
+      const ta = $('#htmlSrc'), fr = $('#htmlOut'), tree = $('#domTree'), box = $('#attrBox');
+      ta.value = HTML_DEFAULT;
+      function render() {
+        const clean = ta.value.replace(/<script[\s\S]*?<\/script>/gi, '');
+        const html = `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:system-ui,sans-serif;margin:12px;color:#222}.__hl{outline:3px solid #f5b700;background:rgba(245,183,0,.2)}</style></head><body>${clean}</body></html>`;
+        // escribimos directo en el documento del iframe: se actualiza igual en Chrome, Safari y Firefox
+        const doc = fr.contentDocument;
+        if (doc) { doc.open(); doc.write(html); doc.close(); buildTree(); resize(); }
+        else { fr.srcdoc = html; fr.onload = () => { buildTree(); resize(); }; }
+      }
+      function resize() {
+        const doc = fr.contentDocument; if (!doc || !doc.body) return;
+        fr.style.height = '190px';  // primero lo achicamos para que también pueda reducirse
+        fr.style.height = Math.max(190, doc.documentElement.scrollHeight + 4) + 'px';
+      }
+      function buildTree() {
+        const doc = fr.contentDocument; if (!doc) return;
+        const mk = el => {
+          const li = document.createElement('li');
+          const cls = el.classList.length ? '.' + [...el.classList].join('.') : '';
+          const id = el.id ? '#' + el.id : '';
+          const s = document.createElement('span'); s.className = 'n';
+          s.innerHTML = `<span class="tk-t">&lt;${el.tagName.toLowerCase()}&gt;</span><span class="tk-a">${esc(id)}${esc(cls)}</span>`;
+          const own = [...el.childNodes].filter(n => n.nodeType === 3 && n.textContent.trim()).map(n => n.textContent.trim()).join(' ');
+          if (own) s.innerHTML += ` <span class="muted">"${esc(own.length > 28 ? own.slice(0, 28) + '…' : own)}"</span>`;
+          s.onclick = ev => {
+            ev.stopPropagation();
+            $$('.n', tree).forEach(x => x.classList.remove('sel')); s.classList.add('sel');
+            $$('.__hl', doc).forEach(x => x.classList.remove('__hl')); el.classList.add('__hl');
+            const attrs = [...el.attributes].filter(a => !(a.name === 'class' && a.value === '__hl'));
+            const tag = el.tagName.toLowerCase();
+            let h = `<b>&lt;${tag}&gt;</b> · hijos: ${el.children.length}<br>`;
+            h += attrs.length ? attrs.map(a => { const v = a.name === 'class' ? a.value.replace(/\s*__hl/, '') : a.value; return `<span class="tk-a">${esc(a.name)}</span> = <span class="tk-s">"${esc(v)}"</span>  <span class="muted">→ elem['${esc(a.name)}']</span>`; }).join('<br>') : '<span class="muted">sin atributos</span>';
+            h += `<br><span class="muted">.text →</span> <span class="tk-s">"${esc(el.textContent.replace(/\s+/g, ' ').trim().slice(0, 80))}"</span>`;
+            box.innerHTML = h;
+          };
+          li.appendChild(s);
+          if (el.children.length) { const ul = document.createElement('ul');[...el.children].forEach(c => ul.appendChild(mk(c))); li.appendChild(ul); }
+          return li;
+        };
+        tree.innerHTML = ''; const ul = document.createElement('ul');
+        [...doc.body.children].forEach(c => ul.appendChild(mk(c)));
+        tree.appendChild(ul);
+        box.innerHTML = '<span class="muted">← selecciona un nodo</span>';
+      }
+      let t; const schedule = () => { clearTimeout(t); t = setTimeout(render, 200); };
+      ['input', 'keyup', 'paste', 'change'].forEach(ev => ta.addEventListener(ev, schedule));
+      $('#htmlReset').onclick = () => { ta.value = HTML_DEFAULT; render(); };
+      render();
+    })();
+
+    /* ======================================================= §3 HTTP sim */
+    const SCEN = [
+      {
+        label: 'GET portada de books.toscrape.com', m: 'GET', host: 'books.toscrape.com', path: '/', code: 200, txt: 'OK',
+        rh: 'Content-Type: text/html', body: '<!DOCTYPE html>\n<html lang="en-us">\n  <head><title>All products | Books to Scrape</title>…\n  <article class="product_pod">…',
+        py: 'response = requests.get("https://books.toscrape.com/")\nresponse.status_code   # 200\nresponse.text[:15]     # \'<!DOCTYPE html>\''
+      },
+      {
+        label: 'GET page-51.html (no existe)', m: 'GET', host: 'books.toscrape.com', path: '/catalogue/page-51.html', code: 404, txt: 'Not Found',
+        rh: 'Content-Type: text/html', body: '<html><head><title>404 Not Found</title></head>…',
+        py: 'response = requests.get(".../catalogue/page-51.html")\nresponse.status_code   # 404  → ¡no hay libros que parsear!'
+      },
+      {
+        label: 'GET PokeAPI pikachu (API pública)', m: 'GET', host: 'pokeapi.co', path: '/api/v2/pokemon/pikachu', code: 200, txt: 'OK',
+        rh: 'Content-Type: application/json', body: '{\n  "name": "pikachu",\n  "abilities": [\n    {"ability": {"name": "static", …}},\n    …',
+        py: 'data = requests.get("https://pokeapi.co/api/v2/pokemon/pikachu").json()\ndata["name"]           # \'pikachu\''
+      },
+      {
+        label: 'GET NASA APOD sin api_key', m: 'GET', host: 'api.nasa.gov', path: '/planetary/apod', code: 403, txt: 'Forbidden',
+        rh: 'Content-Type: application/json', body: '{\n  "error": {\n    "code": "API_KEY_MISSING",\n    "message": "No api_key was supplied. …"\n  }\n}',
+        py: 'r = requests.get("https://api.nasa.gov/planetary/apod")\nr.status_code          # 403 → falta autenticarse'
+      },
+      {
+        label: 'GET NASA APOD con api_key=DEMO_KEY', m: 'GET', host: 'api.nasa.gov', path: '/planetary/apod?api_key=DEMO_KEY', code: 200, txt: 'OK',
+        rh: 'Content-Type: application/json', body: '{\n  "date": "…",\n  "title": "…",\n  "media_type": "image",\n  "url": "https://apod.nasa.gov/apod/image/…"\n}',
+        py: 'r = requests.get("https://api.nasa.gov/planetary/apod", params={"api_key": "DEMO_KEY"})\nr.status_code          # 200\nr.json()["title"]'
+      },
+      {
+        label: 'POST un formulario (httpbin.org)', m: 'POST', host: 'httpbin.org', path: '/post', code: 200, txt: 'OK', reqBody: 'nombre=Ada&curso=IMT2200',
+        rh: 'Content-Type: application/json', body: '{\n  "form": {"curso": "IMT2200", "nombre": "Ada"},\n  …\n}',
+        py: 'r = requests.post("https://httpbin.org/post", data={"nombre": "Ada", "curso": "IMT2200"})\nr.json()["form"]       # {\'curso\': \'IMT2200\', \'nombre\': \'Ada\'}'
+      },
+      {
+        label: 'GET a un servidor con problemas (ejemplo)', m: 'GET', host: 'api.ejemplo.cl', path: '/v1/datos', code: 500, txt: 'Internal Server Error',
+        rh: 'Content-Type: text/plain', body: 'Internal Server Error',
+        py: 'r = requests.get("https://api.ejemplo.cl/v1/datos")\nr.status_code          # 500 → no es culpa nuestra; reintentar más tarde'
+      },
+    ];
+    (function () {
+      const sel = $('#httpScenario');
+      SCEN.forEach((s, i) => sel.add(new Option(s.label, i)));
+      const req = $('#pktReq'), res = $('#pktRes');
+      function fill(s) {
+        $('#srvHost').textContent = s.host;
+        $('#reqMsg').innerHTML = `<b>${s.m}</b> ${esc(s.path)} HTTP/1.1\n<span class="tk-a">Host</span>: ${esc(s.host)}\n<span class="tk-a">User-Agent</span>: python-requests/2.32\n<span class="tk-a">Accept</span>: */*` + (s.reqBody ? `\n<span class="tk-a">Content-Type</span>: application/x-www-form-urlencoded\n\n${esc(s.reqBody)}` : '');
+        $('#pyMsg').innerHTML = hlPy(s.py);
+      }
+      const color = c => c < 300 ? 'var(--ok)' : c < 500 ? 'var(--warn)' : 'var(--err)';
+      sel.onchange = () => { fill(SCEN[sel.value]); $('#resMsg').innerHTML = '<span class="muted">Presiona «Enviar request»</span>'; $$('#statusLegend span').forEach(x => x.classList.remove('lit')); };
+      fill(SCEN[0]);
+      let busy = false;
+      async function anim(g, x0, x1, y, ms) {
+        g.setAttribute('opacity', 1); const t0 = performance.now();
+        await new Promise(done => {
+          (function f(t) {
+            const k = Math.min(1, (t - t0) / ms), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+            g.setAttribute('transform', `translate(${x0 + (x1 - x0) * e},${y})`); k < 1 ? requestAnimationFrame(f) : done();
+          })(t0);
+        });
+      }
+      $('#httpSend').onclick = async () => {
+        if (busy) return; busy = true; const s = SCEN[sel.value];
+        $('#resMsg').innerHTML = '<span class="muted">esperando respuesta…</span>';
+        $$('#statusLegend span').forEach(x => x.classList.remove('lit'));
+        res.setAttribute('opacity', 0); $('#pktReqT').textContent = s.m;
+        await anim(req, 165, 535, 45, 800); req.setAttribute('opacity', 0);
+        const box = $('#srvBox'); box.style.stroke = 'var(--accent)'; await sleep(350); box.style.stroke = '';
+        $('#pktResT').textContent = s.code; $('#pktResR').setAttribute('fill', color(s.code));
+        await anim(res, 535, 165, 78, 800);
+        $('#resMsg').innerHTML = `HTTP/1.1 <b style="color:${color(s.code)}">${s.code} ${s.txt}</b>\n<span class="tk-a">${s.rh.split(':')[0]}</span>:${esc(s.rh.split(':').slice(1).join(':'))}\n\n${esc(s.body)}`;
+        $(`#statusLegend span[data-c="${String(s.code)[0]}"]`).classList.add('lit');
+        busy = false;
+      };
+    })();
+
+    /* ======================================================= §4 mock site */
+    const BOOKS = [
+      { t: 'A Light in the Attic', slug: 'a-light-in-the-attic_1000', p: '51.77', r: 'Three', c: '#c9a27e' },
+      { t: 'Tipping the Velvet', slug: 'tipping-the-velvet_999', p: '53.74', r: 'One', c: '#8e6c8a' },
+      { t: 'Soumission', slug: 'soumission_998', p: '50.10', r: 'One', c: '#d9c27a' },
+      { t: 'Sharp Objects', slug: 'sharp-objects_997', p: '47.82', r: 'Four', c: '#a33b3b' },
+      { t: 'Sapiens: A Brief History of Humankind', slug: 'sapiens-a-brief-history-of-humankind_996', p: '54.23', r: 'Five', c: '#c8b49a' },
+      { t: 'The Requiem Red', slug: 'the-requiem-red_995', p: '22.65', r: 'One', c: '#7a2b2b' },
+    ];
+    const STARS = { One: 1, Two: 2, Three: 3, Four: 4, Five: 5 };
+    const short = t => t.length > 18 ? t.slice(0, 15) + '...' : t;
+    function buildMock(root) {
+      root.innerHTML = '';
+      const h = (tag, attrs = {}, kids = []) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); kids.forEach(k => e.append(k)); return e; };
+      const side = h('aside', {}, [h('ul', { class: 'nav nav-list' }, [
+        h('li', {}, [h('a', { href: 'catalogue/category/books_1/index.html' }, ['Books'])]),
+        ...[['Travel', 'travel_2'], ['Mystery', 'mystery_3'], ['Historical Fiction', 'historical-fiction_4'], ['Poetry', 'poetry_23'], ['Fiction', 'fiction_10']]
+          .map(([n, s]) => h('li', {}, [h('a', { href: `catalogue/category/books/${s}/index.html` }, [n])]))
+      ])]);
+      const arts = BOOKS.map(b => {
+        const href = `catalogue/${b.slug}/index.html`;
+        return h('li', {}, [h('article', { class: 'product_pod' }, [
+          h('div', { class: 'image_container', style: `background:${b.c}` }, []),
+          h('p', { class: `star-rating ${b.r}` }, ['★'.repeat(STARS[b.r]) + '☆'.repeat(5 - STARS[b.r])]),
+          h('h3', {}, [h('a', { href, title: b.t }, [short(b.t)])]),
+          h('div', { class: 'product_price' }, [
+            h('p', { class: 'price_color' }, ['£' + b.p]),
+            h('p', { class: 'instock availability' }, ['In stock']),
+            h('button', { type: 'button' }, ['Add to basket'])])
+        ])]);
+      });
+      const pager = h('ul', { class: 'pager' }, [h('li', { class: 'current' }, ['Page 1 of 50']), h('li', { class: 'next' }, [h('a', { href: 'catalogue/page-2.html' }, ['next'])])]);
+      const sec = h('section', {}, [h('ol', { class: 'row' }, arts), pager]);
+      root.append(h('div', { class: 'm-head' }, ['Books to Scrape']), h('div', { class: 'm-body' }, [side, sec]));
+    }
+    /* serializa un subárbol como HTML indentado, guardando qué líneas pertenecen a cada elemento */
+    function serialize(root, skipStyle = true) {
+      const lines = [], span = new Map();
+      (function walk(el, d) {
+        const attrs = [...el.attributes].filter(a => !(skipStyle && a.name === 'style')).map(a => ` ${a.name}="${a.value}"`).join('');
+        const tag = el.tagName.toLowerCase(), pad = '  '.repeat(d);
+        const start = lines.length;
+        const kids = [...el.childNodes].filter(n => n.nodeType === 1 || n.textContent.trim());
+        if (kids.length === 1 && kids[0].nodeType === 3) { lines.push({ t: `${pad}<${tag}${attrs}>${kids[0].textContent.trim()}</${tag}>` }); }
+        else if (!kids.length) { lines.push({ t: `${pad}<${tag}${attrs}></${tag}>` }); }
+        else {
+          lines.push({ t: `${pad}<${tag}${attrs}>` });
+          kids.forEach(k => k.nodeType === 1 ? walk(k, d + 1) : lines.push({ t: '  '.repeat(d + 1) + k.textContent.trim() }));
+          lines.push({ t: `${pad}</${tag}>` });
+        }
+        span.set(el, [start, lines.length - 1]);
+      })(root, 0);
+      return { lines, span };
+    }
+    function renderSrc(pre, ser) {
+      pre.innerHTML = ser.lines.map((l, i) => `<span class="ln" data-i="${i}">${hlHtml(l.t)}</span>`).join('');
+    }
+    function hitSrc(pre, ser, els) {
+      const lns = $$('.ln', pre); lns.forEach(l => l.classList.remove('hit', 'hit-start'));
+      let first = null;
+      els.forEach(el => {
+        const sp = ser.span.get(el); if (!sp) return;
+        for (let i = sp[0]; i <= sp[1]; i++) lns[i].classList.add('hit');
+        lns[sp[0]].classList.add('hit-start'); if (first === null || sp[0] < first) first = sp[0];
+      });
+      if (first !== null) pre.scrollTop = Math.max(0, lns[first].offsetTop - 30);
+    }
+
+    /* ---------- §4.1 laboratorio de selectores ---------- */
+    (function () {
+      const mock = $('#mock'); buildMock(mock);
+      const pageRoot = mock.querySelector('.m-body');
+      const ser = serialize(pageRoot); const pre = $('#srcView'); renderSrc(pre, ser);
+      const presets = ['article.product_pod', 'p.price_color', 'h3 a', 'p.star-rating', '.instock.availability', 'ul.nav-list a', 'ul.pager li.current', 'article.product_pod p'];
+      const box = $('#selPresets'), inp = $('#selIn');
+      presets.forEach(p => { const b = document.createElement('button'); b.className = 'chip'; b.textContent = p; b.onclick = () => { inp.value = p; run(); }; box.appendChild(b); });
+      function pyFor(sel) {
+        const m = sel.trim().match(/^([a-z0-9]+)?\.([\w-]+)$/i);
+        if (m) return m[1] ? `soup.find_all('${m[1]}', class_='${m[2]}')` : `soup.find_all(class_='${m[2]}')`;
+        if (/^[a-z0-9]+$/i.test(sel.trim())) return `soup.find_all('${sel.trim()}')`;
+        return '';
+      }
+      function describe(el) {
+        const tag = el.tagName.toLowerCase();
+        if (tag === 'a') return `&lt;a href="${esc(el.getAttribute('href'))}"&gt;  <span class="muted">.text =</span> <span class="tk-s">"${esc(el.textContent)}"</span>` + (el.title ? `  <span class="muted">['title'] =</span> <span class="tk-s">"${esc(el.title)}"</span>` : '');
+        if (tag === 'article') return `&lt;article class="product_pod"&gt; <span class="muted">…título:</span> <span class="tk-s">"${esc(el.querySelector('h3 a').title)}"</span>`;
+        const cls = el.getAttribute('class');
+        return `&lt;${tag}${cls ? ` class="${esc(cls)}"` : ''}&gt;  <span class="muted">.text =</span> <span class="tk-s">"${esc(el.textContent.trim().slice(0, 60))}"</span>` + (tag === 'p' && el.classList.contains('star-rating') ? `  <span class="muted">['class'] =</span> ${esc(JSON.stringify([...el.classList]).replace(/"/g, "'"))}` : '');
+      }
+      function run() {
+        $$('.hit', mock).forEach(e => e.classList.remove('hit'));
+        $$('#selPresets .chip').forEach(c => c.classList.toggle('on', c.textContent === inp.value.trim()));
+        const sel = inp.value.trim(); const res = $('#selRes');
+        const f = pyFor(sel); $('#selPy').textContent = f ? `≡ ${f}` : '';
+        if (!sel) { res.innerHTML = ''; $('#selCount').textContent = ''; hitSrc(pre, ser, []); return; }
+        let els;
+        try { els = [...pageRoot.querySelectorAll(sel)]; }
+        catch (e) { res.innerHTML = `<li class="err-text">Selector inválido</li>`; $('#selCount').textContent = ''; hitSrc(pre, ser, []); return; }
+        els.forEach(e => e.classList.add('hit'));
+        $('#selCount').innerHTML = `<b>${els.length}</b> coincidencias`;
+        res.innerHTML = els.length ? els.map(e => `<li>${describe(e)}</li>`).join('') : '<li class="muted">[]  (lista vacía)</li>';
+        hitSrc(pre, ser, els);
+      }
+      inp.addEventListener('input', run); run();
+    })();
+
+    /* ---------- §4.2 extracción paso a paso ---------- */
+    (function () {
+      const bookSel = $('#extBook'), enc = $('#extEnc');
+      BOOKS.forEach((b, i) => bookSel.add(new Option(`#${i} ${short(b.t)}`, i)));
+      const tmp = document.createElement('div'); buildMock(tmp);
+      const arts = [...tmp.querySelectorAll('article')];
+      let step = -1, ser, art;
+      const steps = [
+        {
+          code: "titulo = book.h3.a['title']", el: a => [a.querySelector('h3 a')], val: a => {
+            const x = a.querySelector('h3 a'); return `book.h3        → &lt;h3&gt;…&lt;/h3&gt;\nbook.h3.a      → &lt;a href="…" title="…"&gt;\nbook.h3.a.text → <span class="tk-s">"${esc(x.textContent)}"</span>   <span class="muted">(¡cortado!)</span>\nbook.h3.a['title'] → <span class="tk-s">"${esc(x.title)}"</span>  ✅`;
+          }
+        },
+        {
+          code: "precio = book.find('p', class_='price_color').text.strip()[2:]", el: a => [a.querySelector('.price_color')], val: a => {
+            const raw = a.querySelector('.price_color').textContent; const txt = enc.value === 'latin' ? 'Â' + raw : raw; const cut = txt.slice(2);
+            const ok = !isNaN(parseFloat(cut)) && cut === raw.slice(1);
+            return `.text          → <span class="tk-s">"${esc(txt)}"</span>   <span class="muted">${enc.value === 'latin' ? '(£ mal decodificado como 2 caracteres: Â + £)' : '(decodificado correctamente)'}</span>\n.strip()[2:]   → <span class="tk-s">"${esc(cut)}"</span>\nfloat(precio)  → <b class="${ok ? '' : 'err-text'}">${parseFloat(cut)}</b> ${ok ? '✅' : '❌ ¡se comió el primer dígito!'}`;
+          }
+        },
+        {
+          code: "stock = book.find('p', class_='instock availability').text.strip()", el: a => [a.querySelector('.availability')], val: a =>
+            `.text.strip()  → <span class="tk-s">"In stock"</span>\n'yes' if 'In stock' in stock else 'no'  → <span class="tk-s">'yes'</span>`
+        },
+        {
+          code: "rating = book.p['class'][1]", el: a => [a.querySelector('p')], val: a => {
+            const cl = [...a.querySelector('p').classList]; return `book.p              → <span class="muted">el PRIMER &lt;p&gt; dentro del article</span>\nbook.p['class']     → ${esc(JSON.stringify(cl).replace(/"/g, "'"))}\nbook.p['class'][1]  → <span class="tk-s">'${cl[1]}'</span>\nrating_c.get('${cl[1]}', 0) → <b>${STARS[cl[1]]}</b>`;
+          }
+        },
+        {
+          code: "books.append({'titulo': ..., 'precio': ..., 'stock': ..., 'rating': ...})", el: a => [a], val: a => {
+            const b = BOOKS[bookSel.value]; const p = enc.value === 'latin' ? b.p : ('£' + b.p).slice(2);
+            return `{'titulo': <span class="tk-s">'${esc(b.t)}'</span>, 'precio': ${parseFloat(p)}, 'stock': <span class="tk-s">'yes'</span>, 'rating': ${STARS[b.r]}}\n<span class="muted">→ una fila más del DataFrame</span>`;
+          }
+        },
+      ];
+      $('#extLines').innerHTML = `<div class="step-line done mono"><span class="tk-k">for</span> book <span class="tk-k">in</span> book_elements:</div>` +
+        steps.map((s, i) => `<div class="step-line" data-i="${i}">&nbsp;&nbsp;&nbsp;&nbsp;${hlPy(s.code)}</div>`).join('');
+      function load() {
+        art = arts[bookSel.value]; ser = serialize(art); renderSrc($('#extSrc'), ser); show();
+      }
+      function show() {
+        $$('#extLines .step-line[data-i]').forEach(l => { const i = +l.dataset.i; l.classList.toggle('cur', i === step); l.classList.toggle('done', i < step); });
+        if (step < 0) { $('#extVal').innerHTML = '<span class="muted">Presiona «Siguiente» para ejecutar la primera línea.</span>'; hitSrc($('#extSrc'), ser, []); }
+        else { const s = steps[step]; $('#extVal').innerHTML = s.val(art); hitSrc($('#extSrc'), ser, s.el(art)); }
+        $('#extPrev').disabled = step < 0; $('#extNext').disabled = step >= steps.length - 1;
+      }
+      $('#extNext').onclick = () => { step = Math.min(steps.length - 1, step + 1); show(); };
+      $('#extPrev').onclick = () => { step = Math.max(-1, step - 1); show(); };
+      $('#extReset').onclick = () => { step = -1; show(); };
+      bookSel.onchange = load; enc.onchange = show;
+      load();
+    })();
+
+    /* ---------- §4.3 paginación ---------- */
+    (function () {
+      const r = $('#pagI');
+      function upd() {
+        const i = +r.value; $('#pagIv').textContent = i;
+        $('#pagUrl').innerHTML = `f"https://books.toscrape.com/catalogue/page-<b style="color:var(--accent)">{i}</b>.html"<br><span class="muted">→</span> https://books.toscrape.com/catalogue/page-<b style="color:var(--accent)">${i}</b>.html`;
+        $('#pagStatus').innerHTML = i <= 50 ? `<span class="pill ok">200 OK</span> <span class="small muted">20 libros (${(i - 1) * 20 + 1}–${i * 20})</span>` : `<span class="pill err">404 Not Found</span> <span class="small muted">no hay página 51: range(1, 51) termina en 50</span>`;
+      }
+      r.oninput = upd; upd();
+      let stop = false;
+      $('#pagStop').onclick = () => stop = true;
+      $('#pagRun').onclick = async () => {
+        stop = false; $('#pagRun').disabled = true; $('#pagStop').disabled = false;
+        const log = $('#pagLog'); log.innerHTML = ''; let t = 0;
+        for (let i = 1; i <= 50 && !stop; i++) {
+          const dt = 0.45 + ((i * 37) % 23) / 100;
+          t += dt; r.value = i; upd();
+          $('#pagReq').textContent = i; $('#pagRows').textContent = i * 20; $('#pagTime').textContent = t.toFixed(1) + ' s';
+          $('#pagBar').style.width = (i / 50 * 100) + '%';
+          const d = document.createElement('div'); d.className = 'o';
+          d.textContent = `GET page-${i}.html → 200 · ${dt.toFixed(2)} s · +20 filas`;
+          log.appendChild(d); log.scrollTop = log.scrollHeight;
+          await sleep($('#pagFast').checked ? dt * 1000 / 20 : dt * 1000);
+        }
+        if (!stop) { const d = document.createElement('div'); d.innerHTML = `<b>df_2.shape → (1000, 4)</b>  · total ≈ ${t.toFixed(0)} s`; log.appendChild(d); log.scrollTop = log.scrollHeight; }
+        $('#pagRun').disabled = false; $('#pagStop').disabled = true;
+      };
+    })();
+
+    /* ---------- §4.4 pager ---------- */
+    (function () {
+      const r = $('#pgN');
+      function upd() {
+        const n = +r.value, txt = `Page 1 of ${n}`; $('#pgNv').textContent = n; $('#pgTxt').textContent = `"${txt}"`;
+        const a = txt[txt.length - 1], b = parseInt(txt.split(' ').pop());
+        const okA = +a === n;
+        $('#pgBody').innerHTML = `
+      <tr><td style="text-align:left">int(texto.strip()[-1])</td><td style="text-align:left"><b>${a}</b></td><td>${okA ? '<span class="pill ok">ok</span>' : `<span class="pill err">mal: faltan ${n - +a} páginas</span>`}</td></tr>
+      <tr><td style="text-align:left">int(texto.split()[-1])</td><td style="text-align:left"><b>${b}</b></td><td><span class="pill ok">ok</span></td></tr>`;
+      }
+      r.oninput = upd; upd();
+    })();
+
+    /* ======================================================= §5 APIs */
+    $('#cmpHtml').innerHTML = hlHtml('<p class="price_color">£51.77</p>') + '\n' + hlPy("soup.find('p', class_='price_color')\n    .text.strip()[2:]   # limpiar a mano");
+    $('#cmpJson').innerHTML = esc('{"titulo": "A Light in the Attic",\n "precio": 51.77}') + '\n' + hlPy('data["precio"]   # listo, ya es float');
+
+    (function () {
+      const HOST = 'climatologia.meteochile.gob.cl';
+      function upd() {
+        const ep = $('#uEndpoint').value, code = $('#uCode').value, user = $('#uUser').value, tok = $('#uTok').value;
+        $('#uCode').disabled = ep !== 'agua';
+        const t = (c, s, title) => `<span class="${c}" title="${title}">${esc(s)}</span>`;
+        const path = ep === 'agua' ? `/application/serviciosb/getAguaCaidaDiaria/` : `/application/geoservicios/getCatastroEstacionesGeo`;
+        $('#uOut').innerHTML = t('u-scheme', 'https://', 'protocolo (HTTPS: cifrado)') + t('u-host', HOST, 'servidor al que le hablamos') + t('u-path', path, 'endpoint: qué recurso pedimos') +
+          (ep === 'agua' ? t('u-param', code, 'parámetro de ruta: código de la estación') : '') +
+          t('u-query', `?usuario=${user}&token=${'•'.repeat(Math.min(tok.length, 12))}`, 'query params: credenciales');
+        renderCode();
+      }
+      let mode = 'bad';
+      function renderCode() {
+        const user = $('#uUser').value, tok = $('#uTok').value;
+        const bad = `USUARIO = "${user}"\nAPI_KEY = "${tok}"       # queda guardado en el notebook… y en GitHub\nurl = f"https://${HOST}/.../getAguaCaidaDiaria/330020?usuario={USUARIO}&token={API_KEY}"`;
+        const env = `# archivo .env  (agregarlo a .gitignore)\nUSUARIO=${user}\nAPI_KEY=${tok}`;
+        const good = `from dotenv import load_dotenv\nimport os\n\nload_dotenv()                     # lee .env y lo carga como variables de entorno\nAPI_KEY = os.getenv("API_KEY")\nUSUARIO = os.getenv("USUARIO")\nurl = f"https://${HOST}/.../getAguaCaidaDiaria/330020?usuario={USUARIO}&token={API_KEY}"`;
+        $('#uCode2').innerHTML = mode === 'bad'
+          ? `<pre class="src" style="border-left-color:var(--err)">${hlPy(bad)}</pre><p class="small muted">Si subes el notebook a un repositorio, cualquiera puede usar tu token.</p>`
+          : `<pre class="src" style="border-left-color:var(--warn)">${esc(env)}</pre><pre class="src" style="border-left-color:var(--ok)">${hlPy(good)}</pre><p class="small muted">El notebook solo contiene <code>os.getenv(...)</code>; el secreto queda en un archivo que no se sube.</p>`;
+      }
+      ['uEndpoint', 'uCode', 'uUser', 'uTok'].forEach(id => $('#' + id).addEventListener('input', upd));
+      $$('#w-url .tabs button').forEach(b => b.onclick = () => { mode = b.dataset.t; $$('#w-url .tabs button').forEach(x => x.classList.toggle('on', x === b)); renderCode(); });
+      upd();
+    })();
+
+    /* ---------- §5.2 JSON de ejemplo ---------- */
+    function dia(t) { return { parcial: t, total: t, traza: 0 }; }
+    const SAMPLE = {
+      datosEstacion: { codigoNacional: 330020, nombreEstacion: 'Quinta Normal, Santiago', latitud: -33.445, longitud: -70.683 },
+      datosHistoricos: {
+        diaria: {
+          '2023': { '6': { '21': dia(18.4), '22': dia(35.1), '23': dia(52.6) }, '8': { '2': dia(4.2) } },
+          '2024': { '5': { '31': dia(6.0) }, '6': { '12': dia(21.3), '13': dia(28.9) } },
+        }
+      }
+    };
+    function jsonTree(container, obj, opts = {}) {
+      const { onPick, openDepth = 3 } = opts;
+      container.innerHTML = '';
+      const mk = (val, key, path, depth) => {
+        const li = document.createElement('li'); li.dataset.path = JSON.stringify(path);
+        const isObj = val && typeof val === 'object';
+        const tg = document.createElement('span'); tg.className = 'tg'; li.appendChild(tg);
+        if (key !== null) {
+          const k = document.createElement('span'); k.className = 'k'; k.textContent = JSON.stringify(key); li.appendChild(k); li.append(': ');
+          k.onclick = () => onPick && onPick(path, val, li);
+        }
+        if (isObj) {
+          const n = Object.keys(val).length;
+          const meta = document.createElement('span'); meta.className = 'meta'; meta.textContent = `{…} ${n} ${n === 1 ? 'llave' : 'llaves'}`; li.appendChild(meta);
+          const ul = document.createElement('ul');
+          Object.entries(val).forEach(([k, v]) => ul.appendChild(mk(v, k, [...path, k], depth + 1)));
+          li.appendChild(ul);
+          const set = o => { ul.hidden = !o; tg.textContent = o ? '▾' : '▸'; meta.style.display = o ? 'none' : ''; };
+          set(depth < openDepth); tg.onclick = () => set(ul.hidden);
+          li._open = () => set(true);
+        } else {
+          const v = document.createElement('span'); v.className = typeof val === 'number' ? 'v-n' : 'v-s'; v.textContent = JSON.stringify(val); li.appendChild(v);
+        }
+        return li;
+      };
+      const ul = document.createElement('ul');
+      Object.entries(obj).forEach(([k, v]) => ul.appendChild(mk(v, k, [k], 0)));
+      container.appendChild(ul);
+    }
+    function markPath(container, path, curCls = 'cur') {
+      $$('li', container).forEach(l => l.classList.remove('path', 'cur'));
+      for (let i = 1; i <= path.length; i++) {
+        const li = $$('li', container).find(l => l.dataset.path === JSON.stringify(path.slice(0, i)));
+        if (!li) continue;
+        li.classList.add(i === path.length ? curCls : 'path');
+        let p = li.parentElement.closest('li'); while (p) { p._open && p._open(); p = p.parentElement.closest('li'); }
+        if (i === path.length) { const c = container; const top = li.offsetTop - c.offsetTop; if (top < c.scrollTop || top > c.scrollTop + c.clientHeight - 30) c.scrollTop = top - 40; }
+      }
+    }
+    (function () {
+      const tree = $('#jTree');
+      const LV = ['raíz', 'sección', 'tipo', 'año', 'mes', 'día', 'campo'];
+      function pick(path, val) {
+        markPath(tree, path);
+        $('#jAccess').innerHTML = hlPy('data_santiago' + path.map(k => `["${k}"]`).join(''));
+        const t = val && typeof val === 'object' ? `dict con ${Object.keys(val).length} llaves: ${Object.keys(val).slice(0, 6).map(k => `'${k}'`).join(', ')}` : `${typeof val === 'number' ? 'float' : 'str'}: ${JSON.stringify(val)}`;
+        $('#jVal').innerHTML = `<span class="muted">tipo →</span> ${esc(t)}` + (path[0] === 'datosHistoricos' && path.length >= 3 && path.length <= 5 ? `\n<span class="muted">ojo: las llaves son <b>strings</b> ("${path[path.length - 1]}"), por eso luego hacemos int(year)</span>` : '');
+        $('#jLevels').innerHTML = path.map((k, i) => `<span class="${i === path.length - 1 ? 'on' : ''}">${path[0] === 'datosHistoricos' ? LV[i + 1] : (i === 0 ? 'sección' : 'campo')}: ${esc(k)}</span>`).join('<span class="arrow">→</span>');
+      }
+      jsonTree(tree, SAMPLE, { onPick: pick, openDepth: 2 });
+    })();
+
+    /* ---------- §5.3 aplanar ---------- */
+    (function () {
+      const diaria = SAMPLE.datosHistoricos.diaria;
+      const iters = [];
+      for (const [y, ms] of Object.entries(diaria)) for (const [m, ds] of Object.entries(ms)) for (const [d, v] of Object.entries(ds)) iters.push({ y, m, d, v });
+      const tree = $('#flatTree'); jsonTree(tree, diaria, { openDepth: 0 });
+      const tbl = $('#flatTbl'); let k = 0;
+      const head = '<thead><tr><th></th><th>año</th><th>mes</th><th>día</th><th>parcial</th><th>total</th><th>traza</th></tr></thead>';
+      function draw(newIdx) {
+        tbl.innerHTML = head + '<tbody>' + iters.slice(0, k).map((it, i) => `<tr class="${i === newIdx ? 'new' : ''}"><td>${i}</td><td>${it.y}</td><td>${it.m}</td><td>${it.d}</td><td>${it.v.parcial}</td><td>${it.v.total}</td><td>${it.v.traza}</td></tr>`).join('') + '</tbody>';
+        $('#flatShape').textContent = `shape = (${k}, 6)`;
+        $$('#flatLoop .step-line').forEach(l => l.classList.toggle('cur', k > 0 && l.dataset.l === '3'));
+        if (k > 0) {
+          const it = iters[k - 1];
+          $('#flatVars').innerHTML = `<span class="on">year = "${it.y}"</span><span class="on">month = "${it.m}"</span><span class="on">day = "${it.d}"</span><span>valores = {total: ${it.v.total}, …}</span>`;
+          markPath(tree, [it.y, it.m, it.d]);
+        } else { $('#flatVars').innerHTML = '<span>rows = []</span>'; $$('li', tree).forEach(l => l.classList.remove('path', 'cur')); }
+        $('#flatNext').disabled = $('#flatAll').disabled = k >= iters.length;
+      }
+      $('#flatNext').onclick = () => { if (k < iters.length) { k++; draw(k - 1); } };
+      $('#flatAll').onclick = async () => { while (k < iters.length) { k++; draw(k - 1); await sleep(260); } };
+      $('#flatReset').onclick = () => { k = 0; jsonTree(tree, diaria, { openDepth: 0 }); draw(); };
+      draw();
+      // ---- json_normalize: elegir nivel + reorganizar ----
+      const flatten = (o, p = '', out = {}) => { for (const [kk, v] of Object.entries(o)) { const q = p ? p + '.' + kk : kk; v && typeof v === 'object' ? flatten(v, q, out) : out[q] = v; } return out; };
+      const LEVELS = [
+        { code: 'data_santiago', obj: SAMPLE, note: 'Mezcla metadatos de la estación con los datos diarios, y los nombres de columna son largos. Con datos reales: <b>1 fila × 33.431 columnas</b>.' },
+        { code: 'data_santiago["datosHistoricos"]', obj: SAMPLE.datosHistoricos, note: 'Ya no aparecen los metadatos, pero todavía arrastramos el prefijo <code>diaria.</code> en cada columna.' },
+        { code: 'diaria', obj: diaria, note: '✅ Nivel justo: cada nombre de columna es la <b>dirección</b> del valor, <code>año.mes.día.campo</code>. Separándolo obtenemos las columnas que queremos.' },
+      ];
+      let lvl = 2, ns = 0;
+      const lvBox = $('#normLevels');
+      LEVELS.forEach((L, i) => { const b = document.createElement('button'); b.className = 'chip'; b.textContent = `json_normalize(${L.code})`; b.onclick = () => { lvl = i; drawLevel(); }; lvBox.appendChild(b); });
+      const colHtml = c => { const parts = c.split('.'); return lvl === 2 ? parts.map((x, i) => `<span style="color:${['var(--tok-num)', 'var(--tok-fn)', 'var(--tok-kw)', 'var(--tok-str)'][i]}">${esc(x)}</span>`).join('.') : esc(c); };
+      function drawLevel() {
+        $$('.chip', lvBox).forEach((b, i) => b.classList.toggle('on', i === lvl));
+        const flat = flatten(LEVELS[lvl].obj), cols = Object.keys(flat);
+        $('#normTbl').innerHTML = `<thead><tr><th></th>${cols.map(c => `<th>${colHtml(c)}</th>`).join('')}</tr></thead><tbody><tr><td>0</td>${cols.map(c => `<td>${esc(flat[c])}</td>`).join('')}</tr></tbody>`;
+        $('#normInfo').innerHTML = `<b>shape = (1, ${cols.length})</b>. ${LEVELS[lvl].note}` + (lvl === 2 ? ' <span class="muted">(colores: <span style="color:var(--tok-num)">año</span>.<span style="color:var(--tok-fn)">mes</span>.<span style="color:var(--tok-kw)">día</span>.<span style="color:var(--tok-str)">campo</span>)</span>' : '');
+        $('#normSteps').style.opacity = lvl === 2 ? 1 : .35;
+        $('#normSteps').style.pointerEvents = lvl === 2 ? '' : 'none';
+        drawStep();
+      }
+      const flatD = flatten(diaria), keys = Object.keys(flatD);
+      const final = iters.map(it => ({ año: +it.y, mes: +it.m, día: +it.d, ...it.v })).sort((a, b) => a.año - b.año || a.mes - b.mes || a.día - b.día);
+      const STEPS = [
+        {
+          t: 'plano  (Serie)', shape: `(${keys.length},)`, explain: '<code>.iloc[0]</code> toma la única fila y la convierte en una <b>Serie</b>: el índice son los nombres de columna y los valores, los datos. Pasamos de "ancho" a "largo".',
+          tbl: () => `<thead><tr><th style="text-align:left">índice</th><th>valor</th></tr></thead><tbody>${keys.map(k => `<tr><td style="text-align:left">${colHtml(k)}</td><td>${flatD[k]}</td></tr>`).join('')}</tbody>`
+        },
+        {
+          t: 'plano  (Serie con MultiIndex)', shape: `(${keys.length},)`, explain: '<code>.str.split(".", expand=True)</code> corta cada nombre en 4 pedazos y crea un <b>MultiIndex</b> de 4 niveles, al que le ponemos nombre.',
+          tbl: () => `<thead><tr><th>año</th><th>mes</th><th>día</th><th>campo</th><th>valor</th></tr></thead><tbody>${keys.map(k => { const [y, m, d, c] = k.split('.'); return `<tr><td>'${y}'</td><td>'${m}'</td><td>'${d}'</td><td>${c}</td><td>${flatD[k]}</td></tr>`; }).join('')}</tbody>`
+        },
+        {
+          t: 'df2  (DataFrame)', shape: `(${final.length}, 6)`, explain: '<code>.unstack("campo")</code> convierte el nivel <code>campo</code> en <b>columnas</b>, así que cada día queda en una fila. <code>.reset_index()</code> pasa año, mes y día a columnas normales. Ojo: siguen siendo <b>strings</b> (<code>"2023"</code>).',
+          tbl: () => `<thead><tr><th></th><th>año</th><th>mes</th><th>día</th><th>parcial</th><th>total</th><th>traza</th></tr></thead><tbody>${final.map((r, i) => `<tr><td>${i}</td><td>'${r.año}'</td><td>'${r.mes}'</td><td>'${r.día}'</td><td>${r.parcial}</td><td>${r.total}</td><td>${r.traza}</td></tr>`).join('')}</tbody>`
+        },
+        {
+          t: 'df2  (DataFrame final)', shape: `(${final.length}, 6)`, explain: '<code>.astype(int)</code> convierte año, mes y día a enteros, y <code>sort_values</code> ordena cronológicamente (como texto, <code>"10"</code> quedaría antes que <code>"2"</code>). <b>✅ Es el mismo DataFrame que con los tres for.</b>',
+          tbl: () => `<thead><tr><th></th><th>año</th><th>mes</th><th>día</th><th>parcial</th><th>total</th><th>traza</th></tr></thead><tbody>${final.map((r, i) => `<tr><td>${i}</td><td>${r.año}</td><td>${r.mes}</td><td>${r.día}</td><td>${r.parcial}</td><td>${r.total}</td><td>${r.traza}</td></tr>`).join('')}</tbody>`
+        },
+      ];
+      function drawStep() {
+        const S = STEPS[ns];
+        $$('#normSteps .step-line').forEach(l => { const n = +l.dataset.n; l.classList.toggle('cur', n === ns); l.classList.toggle('done', n < ns); });
+        $('#normExplain').innerHTML = S.explain;
+        $('#normStepTitle').textContent = S.t; $('#normStepShape').textContent = `shape = ${S.shape}`;
+        $('#normStepTbl').innerHTML = S.tbl();
+        $('#normPrev').disabled = ns === 0; $('#normNext').disabled = ns === STEPS.length - 1;
+      }
+      $('#normNext').onclick = () => { ns = Math.min(STEPS.length - 1, ns + 1); drawStep(); };
+      $('#normPrev').onclick = () => { ns = Math.max(0, ns - 1); drawStep(); };
+      drawLevel();
+      $$('#w-flat .wh .tabs button').forEach(b => b.onclick = () => {
+        $$('#w-flat .wh .tabs button').forEach(x => x.classList.toggle('on', x === b));
+        $('#flatNorm').hidden = b.dataset.m !== 'norm'; $('#flatLoop').hidden = b.dataset.m !== 'loop';
+      });
+    })();
+
+    /* ======================================================= §6 mapas */
+    const CHILE = [{ "id": "CLAP", "name": "Arica y Parinacota", "rings": [[[-68.99, -18.95], [-69.19, -19.1], [-69.79, -18.99], [-70.28, -19.17], [-70.36, -18.77], [-70.3, -18.45], [-70.39, -18.34], [-70.13, -18.32], [-69.99, -18.26], [-69.88, -18.16], [-69.78, -17.96], [-69.85, -17.69], [-69.68, -17.66], [-69.51, -17.51], [-69.5, -17.62], [-69.33, -17.81], [-69.3, -17.98], [-69.08, -18.04], [-69.16, -18.14], [-68.95, -18.87], [-68.99, -18.95]]] }, { "id": "CLTA", "name": "Tarapacá", "rings": [[[-70.27, -19.17], [-69.79, -18.99], [-69.19, -19.1], [-68.99, -18.95], [-68.91, -19.07], [-68.45, -19.43], [-68.7, -19.72], [-68.55, -19.86], [-68.58, -20.05], [-68.79, -20.11], [-68.73, -20.15], [-68.68, -20.33], [-68.76, -20.36], [-68.75, -20.45], [-68.48, -20.62], [-68.57, -20.74], [-68.53, -20.93], [-68.56, -21.06], [-68.69, -21.12], [-68.79, -21.24], [-69.45, -21.45], [-69.74, -21.38], [-69.96, -21.45], [-70.06, -21.45], [-70.08, -21.23], [-70.17, -21.01], [-70.13, -20.94], [-70.21, -20.81], [-70.12, -20.0], [-70.15, -19.72], [-70.24, -19.6], [-70.2, -19.53], [-70.29, -19.3], [-70.27, -19.17]]] }, { "id": "CLAN", "name": "Antofagasta", "rings": [[[-70.06, -21.45], [-69.91, -21.45], [-69.74, -21.38], [-69.51, -21.44], [-69.34, -21.42], [-68.79, -21.24], [-68.69, -21.12], [-68.56, -21.06], [-68.53, -20.93], [-68.43, -20.95], [-68.21, -21.28], [-68.2, -21.57], [-68.11, -21.79], [-68.09, -21.97], [-67.96, -22.1], [-67.95, -22.33], [-67.86, -22.55], [-67.89, -22.82], [-67.77, -22.89], [-67.62, -22.9], [-67.19, -22.82], [-67.01, -23.0], [-67.36, -24.03], [-68.24, -24.39], [-68.33, -24.5], [-68.4, -24.5], [-68.45, -24.63], [-68.5, -24.61], [-68.58, -24.81], [-68.47, -24.91], [-68.37, -25.12], [-68.49, -25.16], [-68.55, -25.29], [-68.72, -25.38], [-69.01, -25.39], [-68.99, -25.48], [-69.08, -25.65], [-69.44, -25.68], [-69.57, -25.65], [-69.71, -25.66], [-69.88, -25.75], [-70.15, -25.74], [-70.27, -25.83], [-70.4, -25.82], [-70.63, -26.03], [-70.74, -25.83], [-70.63, -25.63], [-70.65, -25.52], [-70.46, -25.38], [-70.43, -25.24], [-70.5, -25.1], [-70.47, -25.0], [-70.58, -24.73], [-70.58, -24.52], [-70.51, -24.17], [-70.5, -23.78], [-70.39, -23.58], [-70.41, -23.51], [-70.5, -23.47], [-70.54, -23.53], [-70.63, -23.52], [-70.59, -23.42], [-70.58, -23.11], [-70.51, -23.01], [-70.47, -23.1], [-70.4, -23.07], [-70.29, -22.9], [-70.31, -22.79], [-70.24, -22.49], [-70.19, -21.88], [-70.15, -21.86], [-70.15, -21.65], [-70.06, -21.45]]] }, { "id": "CLAT", "name": "Atacama", "rings": [[[-70.63, -26.03], [-70.4, -25.82], [-70.27, -25.83], [-70.15, -25.74], [-69.88, -25.75], [-69.71, -25.66], [-69.57, -25.65], [-69.44, -25.68], [-69.08, -25.65], [-68.99, -25.48], [-69.01, -25.39], [-68.72, -25.38], [-68.55, -25.29], [-68.61, -25.49], [-68.41, -26.14], [-68.58, -26.3], [-68.6, -26.46], [-68.3, -26.93], [-68.33, -27.04], [-68.52, -27.08], [-68.59, -27.16], [-68.72, -27.11], [-68.83, -27.14], [-68.93, -27.4], [-69.02, -27.46], [-69.19, -27.95], [-69.3, -28.0], [-69.42, -28.21], [-69.49, -28.2], [-69.65, -28.4], [-69.68, -28.57], [-69.75, -28.67], [-69.73, -28.79], [-69.8, -28.94], [-69.8, -29.1], [-69.91, -29.14], [-70.04, -29.3], [-69.93, -29.72], [-70.09, -29.75], [-70.3, -29.68], [-70.46, -29.51], [-70.57, -29.12], [-70.69, -29.07], [-70.76, -29.15], [-70.97, -29.21], [-71.02, -29.36], [-71.07, -29.39], [-71.12, -29.34], [-71.2, -29.34], [-71.3, -29.21], [-71.49, -29.21], [-71.52, -28.94], [-71.49, -28.85], [-71.39, -28.8], [-71.3, -28.67], [-71.32, -28.57], [-71.19, -28.41], [-71.17, -28.09], [-71.04, -27.67], [-70.91, -27.62], [-70.89, -27.49], [-70.96, -27.16], [-70.93, -27.11], [-70.87, -27.12], [-70.79, -27.0], [-70.82, -26.87], [-70.73, -26.75], [-70.7, -26.39], [-70.63, -26.34], [-70.68, -26.3], [-70.63, -26.03]]] }, { "id": "CLCO", "name": "Coquimbo", "rings": [[[-71.49, -29.21], [-71.34, -29.19], [-71.2, -29.34], [-71.05, -29.39], [-70.97, -29.21], [-70.76, -29.15], [-70.71, -29.07], [-70.61, -29.09], [-70.46, -29.51], [-70.3, -29.68], [-70.09, -29.75], [-69.93, -29.72], [-69.92, -29.94], [-69.98, -30.07], [-69.85, -30.13], [-69.85, -30.2], [-69.96, -30.37], [-70.17, -30.36], [-70.14, -30.44], [-70.22, -30.52], [-70.34, -30.94], [-70.27, -31.04], [-70.34, -31.04], [-70.41, -31.15], [-70.48, -31.1], [-70.57, -31.3], [-70.59, -31.57], [-70.48, -31.82], [-70.24, -31.94], [-70.28, -32.05], [-70.38, -32.06], [-70.33, -32.21], [-70.38, -32.22], [-70.74, -32.02], [-70.96, -31.97], [-71.05, -32.03], [-71.18, -32.0], [-71.34, -32.08], [-71.45, -32.04], [-71.54, -32.19], [-71.5, -31.89], [-71.67, -31.17], [-71.7, -30.51], [-71.64, -30.24], [-71.54, -30.29], [-71.45, -30.16], [-71.4, -30.18], [-71.41, -29.99], [-71.3, -29.93], [-71.28, -29.88], [-71.34, -29.73], [-71.29, -29.6], [-71.34, -29.52], [-71.31, -29.41], [-71.36, -29.3], [-71.49, -29.21]]] }, { "id": "CLRM", "name": "Región Metropolitana de Santiago", "rings": [[[-70.11, -33.05], [-70.11, -33.17], [-70.01, -33.3], [-69.87, -33.25], [-69.79, -33.38], [-69.88, -33.56], [-69.86, -33.73], [-69.91, -33.77], [-69.83, -34.24], [-70.05, -34.28], [-70.19, -34.08], [-70.31, -34.06], [-70.44, -33.9], [-70.62, -33.94], [-70.81, -33.96], [-70.82, -34.03], [-70.95, -34.15], [-71.07, -34.19], [-71.71, -33.99], [-71.4, -33.8], [-71.37, -33.51], [-71.45, -33.43], [-71.44, -33.34], [-70.92, -32.98], [-70.74, -32.96], [-70.68, -33.01], [-70.62, -32.97], [-70.33, -33.17], [-70.11, -33.05]]] }, { "id": "CLVS", "name": "Valparaíso", "rings": [[[-71.54, -32.19], [-71.45, -32.04], [-71.34, -32.08], [-71.18, -32.0], [-71.05, -32.03], [-70.96, -31.97], [-70.74, -32.02], [-70.44, -32.21], [-70.33, -32.21], [-70.16, -32.49], [-70.16, -32.74], [-70.0, -32.89], [-70.11, -33.05], [-70.3, -33.17], [-70.62, -32.97], [-70.68, -33.01], [-70.8, -32.96], [-71.05, -33.04], [-71.44, -33.34], [-71.45, -33.43], [-71.37, -33.51], [-71.36, -33.66], [-71.42, -33.73], [-71.4, -33.8], [-71.57, -33.9], [-71.72, -33.97], [-71.87, -33.93], [-71.81, -33.78], [-71.67, -33.7], [-71.62, -33.54], [-71.71, -33.43], [-71.67, -33.33], [-71.76, -33.1], [-71.57, -33.01], [-71.52, -32.87], [-71.55, -32.78], [-71.45, -32.67], [-71.48, -32.54], [-71.41, -32.39], [-71.54, -32.19]]] }, { "id": "CLML", "name": "Maule", "rings": [[[-70.37, -35.03], [-70.39, -35.17], [-70.58, -35.26], [-70.43, -35.36], [-70.47, -35.38], [-70.36, -35.78], [-70.42, -35.87], [-70.38, -36.05], [-70.45, -36.15], [-70.58, -36.14], [-70.71, -36.27], [-70.72, -36.41], [-70.91, -36.41], [-70.97, -36.49], [-71.11, -36.4], [-71.41, -36.43], [-72.05, -36.12], [-72.19, -36.2], [-72.44, -36.15], [-72.5, -36.06], [-72.7, -36.01], [-72.8, -36.05], [-72.8, -35.99], [-72.6, -35.81], [-72.65, -35.57], [-72.53, -35.49], [-72.4, -35.23], [-72.23, -35.12], [-72.19, -34.89], [-72.1, -34.76], [-71.74, -34.95], [-71.42, -34.93], [-71.33, -34.85], [-71.17, -34.82], [-70.96, -34.92], [-70.79, -34.92], [-70.65, -35.01], [-70.37, -35.03]]] }, { "id": "CLLI", "name": "Libertador General Bernardo O'Higgins", "rings": [[[-71.72, -33.97], [-71.62, -34.04], [-71.3, -34.09], [-71.09, -34.19], [-70.95, -34.15], [-70.82, -34.03], [-70.81, -33.96], [-70.46, -33.9], [-70.31, -34.06], [-70.19, -34.08], [-70.06, -34.24], [-70.07, -34.41], [-70.32, -34.75], [-70.28, -34.8], [-70.37, -35.03], [-70.65, -35.01], [-70.79, -34.92], [-70.96, -34.92], [-71.17, -34.82], [-71.33, -34.85], [-71.42, -34.93], [-71.74, -34.95], [-72.1, -34.76], [-72.06, -34.66], [-72.06, -34.43], [-71.99, -34.36], [-72.02, -34.14], [-71.87, -33.93], [-71.72, -33.97]]] }, { "id": "CLNB", "name": "Ñuble", "rings": [[[-72.8, -36.05], [-72.7, -36.01], [-72.5, -36.06], [-72.38, -36.19], [-72.19, -36.2], [-72.05, -36.12], [-71.41, -36.43], [-71.08, -36.41], [-71.03, -36.48], [-71.06, -36.69], [-71.15, -36.69], [-71.2, -36.85], [-71.14, -36.95], [-71.21, -36.97], [-71.09, -37.1], [-71.26, -37.1], [-71.45, -37.04], [-71.55, -37.12], [-72.2, -37.2], [-72.27, -37.15], [-72.19, -37.05], [-72.21, -37.02], [-72.39, -36.92], [-72.65, -36.92], [-72.56, -36.87], [-72.6, -36.72], [-72.8, -36.61], [-72.81, -36.46], [-72.9, -36.44], [-72.83, -36.29], [-72.8, -36.05]]] }, { "id": "CLAR", "name": "La Araucanía", "rings": [[[-71.02, -38.14], [-70.97, -38.42], [-70.83, -38.56], [-70.87, -38.69], [-71.4, -38.91], [-71.41, -39.32], [-71.54, -39.53], [-71.5, -39.57], [-71.52, -39.61], [-71.63, -39.61], [-71.68, -39.5], [-71.77, -39.46], [-71.99, -39.73], [-72.37, -39.73], [-72.55, -39.62], [-72.97, -39.59], [-72.96, -39.38], [-73.25, -39.39], [-73.21, -39.19], [-73.25, -39.22], [-73.53, -38.48], [-73.36, -38.43], [-73.27, -38.48], [-73.28, -38.33], [-73.09, -38.14], [-73.17, -38.03], [-73.06, -37.81], [-73.11, -37.72], [-73.07, -37.65], [-72.51, -37.68], [-72.38, -37.85], [-72.09, -38.02], [-71.72, -38.06], [-71.75, -38.1], [-71.66, -38.25], [-71.31, -38.06], [-71.02, -38.14]]] }, { "id": "CLBI", "name": "Bío-Bío", "rings": [[[-72.9, -36.44], [-72.81, -36.46], [-72.8, -36.61], [-72.6, -36.72], [-72.56, -36.87], [-72.65, -36.92], [-72.39, -36.92], [-72.19, -37.03], [-72.26, -37.1], [-72.24, -37.19], [-71.57, -37.13], [-71.45, -37.04], [-71.26, -37.1], [-71.09, -37.1], [-71.21, -37.29], [-71.12, -37.47], [-71.13, -37.58], [-71.19, -37.66], [-71.01, -38.07], [-71.02, -38.14], [-71.31, -38.06], [-71.66, -38.25], [-71.75, -38.1], [-71.72, -38.06], [-72.09, -38.02], [-72.38, -37.85], [-72.51, -37.68], [-73.07, -37.65], [-73.11, -37.72], [-73.06, -37.81], [-73.17, -38.03], [-73.09, -38.14], [-73.28, -38.33], [-73.27, -38.48], [-73.36, -38.43], [-73.52, -38.48], [-73.54, -38.42], [-73.46, -38.05], [-73.67, -37.72], [-73.69, -37.6], [-73.6, -37.49], [-73.68, -37.35], [-73.64, -37.2], [-73.59, -37.15], [-73.46, -37.24], [-73.24, -37.19], [-73.17, -37.08], [-73.15, -36.83], [-73.21, -36.78], [-73.13, -36.74], [-73.12, -36.6], [-73.07, -36.71], [-72.99, -36.7], [-72.99, -36.52], [-72.93, -36.52], [-72.9, -36.44]]] }, { "id": "CLLR", "name": "Los Ríos", "rings": [[[-73.25, -39.39], [-72.96, -39.38], [-72.97, -39.59], [-72.55, -39.62], [-72.37, -39.73], [-72.19, -39.75], [-71.99, -39.73], [-71.8, -39.47], [-71.72, -39.47], [-71.64, -39.6], [-71.69, -39.57], [-71.71, -39.6], [-71.71, -39.75], [-71.62, -39.91], [-71.68, -40.1], [-71.81, -40.09], [-71.8, -40.24], [-71.67, -40.32], [-71.73, -40.42], [-71.8, -40.41], [-71.89, -40.59], [-72.07, -40.66], [-72.4, -40.68], [-72.72, -40.62], [-72.89, -40.52], [-72.99, -40.35], [-73.73, -40.28], [-73.74, -40.17], [-73.66, -40.11], [-73.71, -39.97], [-73.46, -39.83], [-73.38, -39.9], [-73.41, -39.69], [-73.24, -39.49], [-73.25, -39.39]]] }, { "id": "CLLL", "name": "Los Lagos", "rings": [[[-73.75, -40.27], [-72.99, -40.35], [-72.89, -40.52], [-72.53, -40.67], [-72.07, -40.66], [-71.85, -40.57], [-71.96, -40.72], [-71.85, -40.94], [-71.9, -41.37], [-71.85, -41.57], [-71.93, -41.65], [-71.79, -41.87], [-71.74, -42.08], [-71.92, -42.18], [-72.01, -42.12], [-72.12, -42.26], [-72.04, -42.48], [-72.14, -42.56], [-72.11, -42.86], [-72.15, -43.0], [-72.05, -43.11], [-71.75, -43.17], [-71.75, -43.3], [-71.9, -43.32], [-71.96, -43.44], [-71.87, -43.46], [-71.87, -43.54], [-71.71, -43.6], [-71.71, -43.68], [-71.82, -43.76], [-71.76, -43.77], [-71.76, -43.83], [-71.66, -43.94], [-71.75, -44.04], [-71.8, -44.0], [-72.11, -43.95], [-72.35, -43.73], [-72.56, -43.78], [-72.77, -43.73], [-72.83, -43.64], [-72.88, -43.7], [-73.05, -43.73], [-72.97, -43.62], [-72.91, -43.61], [-73.03, -43.59], [-73.11, -43.46], [-73.08, -43.32], [-72.91, -43.24], [-72.93, -43.1], [-72.86, -43.02], [-72.73, -43.08], [-72.75, -42.91], [-72.85, -42.81], [-72.84, -42.69], [-72.87, -42.59], [-72.82, -42.5], [-72.54, -42.56], [-72.68, -42.48], [-72.84, -42.28], [-72.57, -42.19], [-72.43, -42.46], [-72.48, -42.29], [-72.41, -42.24], [-72.48, -42.22], [-72.43, -42.15], [-72.49, -42.13], [-72.48, -41.96], [-72.61, -42.03], [-72.74, -42.01], [-72.89, -41.91], [-72.65, -41.72], [-72.3, -41.65], [-72.34, -41.61], [-72.3, -41.38], [-72.34, -41.37], [-72.42, -41.66], [-72.58, -41.71], [-72.67, -41.68], [-72.76, -41.54], [-72.95, -41.48], [-73.1, -41.58], [-73.06, -41.7], [-73.2, -41.78], [-73.49, -41.81], [-73.76, -41.75], [-73.7, -41.64], [-73.55, -41.61], [-73.49, -41.51], [-73.62, -41.6], [-73.8, -41.57], [-73.93, -41.09], [-73.95, -40.97], [-73.85, -40.92], [-73.89, -40.86], [-73.81, -40.71], [-73.84, -40.67], [-73.73, -40.54], [-73.78, -40.42], [-73.75, -40.27]], [[-74.33, -43.28], [-74.41, -43.24], [-74.31, -43.14], [-74.32, -43.07], [-74.23, -43.02], [-74.26, -42.99], [-74.17, -42.88], [-74.13, -42.69], [-74.19, -42.43], [-74.16, -42.24], [-74.05, -42.13], [-74.06, -41.95], [-74.01, -41.89], [-74.06, -41.81], [-73.92, -41.78], [-73.9, -41.84], [-73.99, -41.82], [-74.0, -41.86], [-73.87, -41.89], [-73.83, -41.86], [-73.77, -41.9], [-73.75, -41.84], [-73.58, -41.8], [-73.5, -41.84], [-73.58, -41.95], [-73.53, -41.97], [-73.45, -42.06], [-73.49, -42.15], [-73.39, -42.2], [-73.38, -42.29], [-73.67, -42.35], [-73.69, -42.45], [-73.61, -42.51], [-73.75, -42.53], [-73.79, -42.5], [-73.76, -42.46], [-73.82, -42.51], [-73.81, -42.61], [-73.49, -42.82], [-73.51, -42.88], [-73.71, -42.87], [-73.58, -42.97], [-73.52, -43.05], [-73.61, -43.05], [-73.5, -43.13], [-73.78, -43.12], [-73.74, -43.23], [-73.67, -43.29], [-73.73, -43.32], [-73.67, -43.36], [-73.73, -43.39], [-73.8, -43.36], [-73.85, -43.42], [-73.93, -43.36], [-74.05, -43.36], [-74.08, -43.4], [-74.33, -43.28]]] }, { "id": "CLAI", "name": "Aisén del General Carlos Ibáñez del Campo", "rings": [[[-73.04, -43.73], [-72.88, -43.7], [-72.83, -43.64], [-72.77, -43.73], [-72.56, -43.78], [-72.35, -43.73], [-72.13, -43.95], [-71.8, -44.0], [-71.75, -44.04], [-71.86, -44.11], [-71.81, -44.21], [-71.81, -44.33], [-71.86, -44.36], [-71.82, -44.4], [-71.21, -44.43], [-71.12, -44.53], [-71.23, -44.64], [-71.24, -44.75], [-71.3, -44.8], [-71.5, -44.74], [-72.09, -44.78], [-72.07, -44.9], [-71.59, -44.98], [-71.32, -45.27], [-71.39, -45.37], [-71.51, -45.41], [-71.49, -45.5], [-71.77, -45.57], [-71.8, -45.72], [-71.76, -45.85], [-71.67, -45.88], [-71.61, -45.97], [-71.77, -46.11], [-71.91, -46.15], [-71.76, -46.24], [-71.68, -46.54], [-71.69, -46.69], [-71.95, -46.81], [-71.97, -46.95], [-71.91, -47.0], [-72.01, -47.06], [-71.87, -47.14], [-71.88, -47.22], [-72.03, -47.2], [-72.04, -47.29], [-72.17, -47.41], [-72.36, -47.45], [-72.32, -47.5], [-72.34, -47.6], [-72.54, -47.91], [-72.34, -48.07], [-72.3, -48.35], [-72.58, -48.45], [-72.61, -48.51], [-72.59, -48.79], [-72.78, -48.93], [-73.01, -48.99], [-73.17, -49.19], [-73.17, -49.25], [-74.09, -48.72], [-74.31, -48.73], [-74.32, -48.66], [-74.37, -48.67], [-74.39, -48.6], [-74.2, -48.47], [-73.99, -48.6], [-74.03, -48.45], [-73.89, -48.41], [-74.24, -48.35], [-74.11, -48.31], [-74.27, -48.34], [-74.32, -48.21], [-74.44, -48.18], [-74.51, -48.09], [-74.47, -48.03], [-74.59, -48.08], [-74.63, -48.0], [-74.52, -47.96], [-74.34, -48.02], [-74.28, -48.18], [-74.21, -48.23], [-74.17, -48.22], [-74.31, -47.99], [-74.06, -48.0], [-73.96, -48.05], [-73.89, -48.02], [-73.88, -48.1], [-73.77, -48.03], [-73.8, -48.11], [-73.75, -48.08], [-73.6, -48.13], [-73.6, -48.21], [-73.56, -48.25], [-73.49, -48.17], [-73.35, -48.22], [-73.28, -48.14], [-73.28, -48.08], [-73.37, -48.16], [-73.48, -48.12], [-73.64, -47.98], [-73.65, -47.9], [-73.51, -47.98], [-73.23, -48.0], [-73.48, -47.96], [-73.52, -47.88], [-73.62, -47.86], [-73.55, -47.81], [-73.73, -47.74], [-73.67, -47.62], [-73.7, -47.63], [-73.67, -47.57], [-73.72, -47.53], [-73.78, -47.59], [-73.73, -47.62], [-73.77, -47.78], [-73.92, -47.84], [-74.02, -47.83], [-74.07, -47.77], [-74.35, -47.79], [-74.41, -47.77], [-74.34, -47.76], [-74.38, -47.74], [-74.55, -47.78], [-74.73, -47.73], [-74.67, -47.65], [-74.57, -47.68], [-74.63, -47.62], [-74.61, -47.57], [-74.53, -47.55], [-74.52, -47.6], [-74.44, -47.55], [-74.34, -47.64], [-74.48, -47.7], [-74.34, -47.67], [-74.25, -47.75], [-74.16, -47.75], [-74.27, -47.73], [-74.3, -47.68], [-74.13, -47.66], [-74.24, -47.66], [-74.23, -47.63], [-74.05, -47.62], [-74.14, -47.59], [-74.06, -47.53], [-74.29, -47.6], [-74.34, -47.52], [-74.39, -47.53], [-74.45, -47.48], [-74.39, -47.45], [-74.47, -47.42], [-74.51, -47.47], [-74.53, -47.43], [-74.32, -47.22], [-74.28, -47.25], [-74.23, -47.21], [-74.17, -47.22], [-74.11, -47.34], [-74.12, -47.19], [-74.02, -47.18], [-73.97, -47.25], [-73.99, -47.17], [-74.06, -47.16], [-73.95, -47.02], [-74.14, -46.98], [-74.21, -46.89], [-74.13, -46.83], [-74.24, -46.86], [-74.29, -46.82], [-74.27, -46.78], [-74.33, -46.76], [-74.59, -46.73], [-74.48, -46.78], [-74.64, -46.78], [-74.67, -46.85], [-74.43, -46.86], [-74.48, -46.9], [-74.68, -46.88], [-74.82, -46.77], [-74.86, -46.81], [-75.02, -46.75], [-75.08, -46.64], [-74.94, -46.52], [-74.93, -46.44], [-75.2, -46.63], [-75.21, -46.6], [-75.34, -46.66], [-75.41, -46.63], [-75.66, -46.77], [-75.63, -46.79], [-75.54, -46.7], [-75.42, -46.71], [-75.48, -46.77], [-75.39, -46.78], [-75.43, -46.86], [-75.35, -46.87], [-75.41, -46.93], [-75.55, -46.95], [-75.65, -46.87], [-75.71, -46.79], [-75.7, -46.64], [-75.64, -46.57], [-75.52, -46.55], [-75.54, -46.51], [-75.37, -46.47], [-75.4, -46.44], [-75.35, -46.39], [-75.27, -46.36], [-75.22, -46.4], [-75.2, -46.3], [-75.03, -46.34], [-75.14, -46.31], [-75.09, -46.22], [-74.93, -46.27], [-74.96, -46.22], [-74.88, -46.15], [-74.78, -46.21], [-74.76, -46.18], [-74.82, -46.11], [-74.77, -46.04], [-74.7, -46.03], [-74.74, -46.02], [-74.73, -45.94], [-74.65, -45.82], [-74.56, -45.83], [-74.56, -45.9], [-74.46, -45.93], [-74.46, -46.02], [-74.4, -45.94], [-74.46, -45.82], [-74.17, -45.79], [-74.1, -45.84], [-74.19, -45.88], [-74.06, -45.93], [-74.08, -45.98], [-74.17, -46.01], [-74.08, -46.03], [-74.17, -46.14], [-74.08, -46.1], [-74.04, -45.98], [-73.97, -46.06], [-74.02, -46.15], [-74.34, -46.25], [-74.49, -46.19], [-74.34, -46.26], [-74.05, -46.19], [-74.08, -46.32], [-74.03, -46.29], [-73.84, -46.34], [-74.02, -46.2], [-73.97, -46.14], [-73.88, -46.14], [-73.76, -46.27], [-73.99, -46.56], [-73.92, -46.6], [-73.85, -46.6], [-73.78, -46.49], [-73.74, -46.53], [-73.76, -46.44], [-73.67, -46.36], [-73.49, -46.3], [-73.57, -46.27], [-73.52, -46.18], [-73.34, -46.03], [-73.43, -46.03], [-73.69, -46.32], [-73.62, -46.1], [-73.66, -45.98], [-73.52, -45.88], [-73.56, -45.83], [-73.4, -45.7], [-73.19, -45.66], [-73.33, -45.62], [-73.59, -45.78], [-73.52, -45.46], [-73.45, -45.41], [-73.41, -45.45], [-73.39, -45.38], [-73.32, -45.4], [-73.33, -45.34], [-73.23, -45.3], [-73.01, -45.44], [-72.86, -45.46], [-72.83, -45.42], [-72.98, -45.4], [-73.26, -45.25], [-73.45, -45.28], [-73.45, -45.2], [-73.3, -45.14], [-73.4, -44.99], [-73.12, -44.95], [-72.73, -44.76], [-72.68, -44.54], [-72.6, -44.51], [-72.59, -44.34], [-72.72, -44.5], [-72.92, -44.37], [-72.94, -44.31], [-73.18, -44.25], [-73.13, -44.15], [-73.2, -44.2], [-73.28, -44.17], [-73.29, -44.12], [-73.22, -44.13], [-73.22, -44.07], [-73.12, -44.09], [-73.14, -43.99], [-73.01, -43.77], [-72.97, -43.82], [-72.9, -43.78], [-72.82, -43.81], [-72.85, -43.68], [-72.89, -43.75], [-73.04, -43.73]], [[-75.34, -48.62], [-75.29, -48.71], [-75.35, -48.74], [-75.37, -48.7], [-75.61, -48.79], [-75.65, -48.72], [-75.51, -48.72], [-75.34, -48.62]], [[-75.33, -48.55], [-75.34, -48.61], [-75.57, -48.7], [-75.61, -48.66], [-75.5, -48.66], [-75.44, -48.61], [-75.64, -48.62], [-75.66, -48.5], [-75.61, -48.47], [-75.34, -48.43], [-75.37, -48.54], [-75.33, -48.55]], [[-74.5, -48.58], [-74.51, -48.67], [-74.61, -48.69], [-74.75, -48.63], [-75.0, -48.6], [-75.03, -48.5], [-74.95, -48.42], [-74.83, -48.39], [-74.78, -48.49], [-74.72, -48.45], [-74.81, -48.36], [-74.76, -48.15], [-74.72, -48.13], [-74.68, -48.3], [-74.58, -48.38], [-74.67, -48.42], [-74.61, -48.46], [-74.59, -48.58], [-74.53, -48.62], [-74.5, -48.58]], [[-74.54, -48.32], [-74.52, -48.19], [-74.6, -48.25], [-74.61, -48.16], [-74.53, -48.12], [-74.37, -48.25], [-74.54, -48.32]], [[-75.16, -48.3], [-75.12, -48.26], [-75.21, -48.21], [-75.26, -48.07], [-75.08, -48.09], [-74.83, -48.15], [-74.84, -48.36], [-75.03, -48.44], [-75.16, -48.3]], [[-75.15, -48.66], [-75.22, -48.71], [-75.23, -48.64], [-75.28, -48.63], [-75.32, -48.49], [-75.27, -48.42], [-75.33, -48.39], [-75.32, -48.35], [-75.49, -48.42], [-75.55, -48.4], [-75.35, -48.3], [-75.41, -48.32], [-75.39, -48.27], [-75.54, -48.32], [-75.45, -48.23], [-75.5, -48.23], [-75.54, -48.23], [-75.59, -48.09], [-75.5, -48.03], [-75.46, -48.07], [-75.34, -48.02], [-75.27, -48.17], [-75.29, -48.22], [-75.16, -48.37], [-75.19, -48.41], [-75.1, -48.47], [-75.15, -48.48], [-75.08, -48.51], [-75.07, -48.6], [-75.15, -48.66]], [[-75.27, -48.03], [-75.17, -47.89], [-74.94, -47.88], [-74.83, -47.81], [-74.77, -47.85], [-74.81, -47.94], [-74.78, -47.97], [-74.82, -47.99], [-74.73, -48.11], [-75.01, -48.04], [-75.05, -47.99], [-75.27, -48.03]], [[-74.41, -47.94], [-74.5, -47.92], [-74.48, -47.9], [-74.36, -47.83], [-74.25, -47.88], [-74.33, -47.82], [-74.25, -47.81], [-73.91, -47.88], [-73.84, -47.86], [-73.83, -47.94], [-74.32, -47.98], [-74.41, -47.94]], [[-75.18, -47.83], [-75.34, -47.78], [-75.36, -47.74], [-75.12, -47.68], [-75.06, -47.73], [-75.12, -47.78], [-75.02, -47.8], [-75.18, -47.83]], [[-74.07, -47.02], [-73.98, -47.05], [-74.07, -47.14], [-74.15, -47.17], [-74.17, -47.13], [-74.23, -47.1], [-74.19, -47.02], [-74.11, -47.05], [-74.07, -47.02]], [[-73.73, -46.05], [-73.68, -46.09], [-73.75, -46.19], [-73.83, -46.16], [-73.81, -46.14], [-73.94, -46.07], [-73.91, -46.02], [-73.73, -46.05]], [[-74.75, -45.81], [-74.72, -45.85], [-74.77, -46.0], [-74.92, -46.1], [-75.06, -46.1], [-75.11, -46.05], [-74.87, -45.99], [-75.06, -45.97], [-75.1, -45.87], [-74.88, -45.93], [-74.97, -45.86], [-74.89, -45.88], [-74.83, -45.81], [-74.75, -45.81]], [[-74.07, -45.69], [-74.11, -45.59], [-74.0, -45.54], [-73.91, -45.59], [-73.91, -45.67], [-74.0, -45.72], [-74.07, -45.69]], [[-74.5, -45.73], [-74.42, -45.45], [-74.29, -45.48], [-74.24, -45.57], [-74.23, -45.61], [-74.29, -45.62], [-74.21, -45.64], [-74.24, -45.68], [-74.36, -45.7], [-74.33, -45.72], [-74.44, -45.78], [-74.5, -45.73]], [[-73.67, -45.44], [-73.59, -45.48], [-73.61, -45.63], [-73.68, -45.62], [-73.63, -45.67], [-73.61, -45.71], [-73.68, -45.75], [-73.82, -45.64], [-73.74, -45.61], [-73.79, -45.57], [-73.77, -45.51], [-73.67, -45.44]], [[-73.89, -45.47], [-73.82, -45.47], [-73.87, -45.56], [-74.03, -45.52], [-74.12, -45.57], [-74.06, -45.42], [-73.89, -45.47]], [[-73.82, -45.27], [-73.78, -45.32], [-73.83, -45.35], [-74.14, -45.31], [-74.16, -45.24], [-74.07, -45.2], [-73.99, -45.27], [-73.82, -45.27]], [[-73.73, -45.21], [-73.77, -45.28], [-73.84, -45.24], [-73.99, -45.25], [-74.08, -45.14], [-74.21, -45.17], [-74.25, -45.11], [-74.17, -45.03], [-73.87, -44.99], [-73.71, -45.11], [-73.73, -45.21]], [[-74.27, -44.94], [-74.16, -44.86], [-73.92, -44.94], [-74.02, -44.97], [-74.28, -45.03], [-74.36, -45.0], [-74.27, -44.94]], [[-73.93, -44.63], [-73.88, -44.69], [-74.26, -44.8], [-74.36, -44.77], [-74.36, -44.71], [-74.32, -44.7], [-74.41, -44.69], [-74.4, -44.63], [-73.93, -44.63]], [[-73.66, -44.68], [-73.6, -44.72], [-73.75, -44.74], [-73.84, -44.65], [-73.83, -44.59], [-73.68, -44.54], [-73.63, -44.62], [-73.66, -44.68]], [[-73.38, -44.59], [-73.24, -44.64], [-73.28, -44.54], [-73.13, -44.55], [-73.24, -44.51], [-73.25, -44.44], [-73.17, -44.41], [-73.04, -44.48], [-73.09, -44.4], [-73.0, -44.36], [-72.93, -44.44], [-72.98, -44.51], [-72.87, -44.44], [-72.77, -44.47], [-72.72, -44.53], [-72.8, -44.63], [-72.98, -44.6], [-72.83, -44.68], [-72.84, -44.71], [-73.19, -44.93], [-73.29, -44.93], [-73.41, -44.82], [-73.21, -44.8], [-73.3, -44.76], [-73.39, -44.79], [-73.47, -44.64], [-73.38, -44.59]], [[-74.14, -43.83], [-74.05, -43.8], [-73.97, -43.83], [-73.87, -43.76], [-73.76, -43.89], [-73.87, -43.89], [-73.91, -43.87], [-73.87, -43.85], [-73.93, -43.84], [-73.98, -43.87], [-73.91, -43.91], [-74.0, -43.94], [-74.17, -43.88], [-74.14, -43.83]], [[-74.82, -43.64], [-74.83, -43.56], [-74.7, -43.54], [-74.56, -43.63], [-74.76, -43.68], [-74.82, -43.64]]] }, { "id": "CLMA", "name": "Magallanes y Antártica Chilena", "rings": [[[-74.07, -48.74], [-73.1, -49.27], [-73.15, -49.3], [-73.46, -49.31], [-73.47, -49.39], [-73.55, -49.44], [-73.59, -49.54], [-73.46, -49.79], [-73.57, -49.93], [-73.48, -50.01], [-73.53, -50.14], [-73.3, -50.3], [-73.26, -50.57], [-73.14, -50.77], [-72.78, -50.62], [-72.66, -50.67], [-72.51, -50.6], [-72.3, -50.65], [-72.35, -50.74], [-72.26, -50.84], [-72.27, -50.96], [-72.4, -51.11], [-72.26, -51.25], [-72.32, -51.31], [-72.35, -51.48], [-72.45, -51.55], [-72.33, -51.6], [-72.3, -51.69], [-71.98, -51.84], [-71.97, -51.97], [-69.95, -52.01], [-69.49, -52.13], [-69.21, -52.14], [-68.45, -52.31], [-68.45, -52.35], [-68.9, -52.3], [-69.23, -52.2], [-69.47, -52.27], [-69.5, -52.39], [-69.67, -52.53], [-69.85, -52.49], [-70.15, -52.59], [-70.21, -52.65], [-70.32, -52.64], [-70.52, -52.72], [-70.55, -52.72], [-70.53, -52.66], [-70.7, -52.74], [-70.73, -52.7], [-70.86, -52.72], [-70.74, -52.78], [-70.89, -52.91], [-70.81, -52.96], [-70.95, -53.2], [-70.99, -53.38], [-70.94, -53.59], [-70.97, -53.76], [-71.29, -53.89], [-71.64, -53.82], [-71.87, -53.7], [-71.93, -53.73], [-72.0, -53.67], [-72.1, -53.69], [-72.45, -53.41], [-72.41, -53.31], [-72.28, -53.24], [-72.11, -53.26], [-72.08, -53.33], [-72.1, -53.39], [-72.24, -53.43], [-72.09, -53.42], [-72.02, -53.39], [-72.02, -53.25], [-71.86, -53.23], [-71.79, -53.44], [-72.01, -53.55], [-71.81, -53.52], [-71.75, -53.46], [-71.74, -53.22], [-71.36, -53.12], [-71.2, -52.92], [-71.12, -52.92], [-71.17, -52.81], [-71.35, -52.81], [-71.4, -52.73], [-71.4, -52.83], [-71.48, -52.82], [-71.91, -53.01], [-72.02, -53.13], [-72.12, -53.13], [-72.29, -53.03], [-72.27, -53.07], [-72.56, -53.08], [-72.37, -53.07], [-72.19, -53.18], [-72.36, -53.18], [-72.32, -53.21], [-72.36, -53.22], [-72.49, -53.19], [-72.46, -53.23], [-72.54, -53.2], [-72.41, -53.26], [-72.54, -53.27], [-72.52, -53.37], [-72.65, -53.32], [-72.36, -53.54], [-72.53, -53.54], [-72.72, -53.46], [-72.76, -53.39], [-72.79, -53.44], [-72.81, -53.39], [-73.17, -53.26], [-73.29, -53.17], [-72.96, -53.16], [-72.76, -53.24], [-72.78, -53.28], [-72.72, -53.29], [-72.69, -53.24], [-72.8, -53.17], [-72.65, -53.15], [-72.71, -53.11], [-72.85, -53.15], [-72.93, -53.1], [-72.88, -53.04], [-72.93, -53.02], [-72.96, -52.82], [-72.76, -52.77], [-72.7, -52.71], [-72.61, -52.77], [-72.71, -52.87], [-72.59, -52.8], [-72.6, -52.83], [-72.47, -52.81], [-72.43, -52.86], [-72.4, -52.78], [-72.16, -52.65], [-71.98, -52.65], [-71.85, -52.69], [-71.48, -52.65], [-71.57, -52.56], [-72.28, -52.51], [-72.43, -52.62], [-72.4, -52.62], [-72.42, -52.65], [-72.55, -52.59], [-72.39, -52.51], [-72.57, -52.56], [-72.86, -52.5], [-72.99, -52.7], [-72.82, -52.59], [-72.67, -52.65], [-72.79, -52.75], [-73.02, -52.84], [-72.95, -52.89], [-72.96, -53.04], [-73.14, -53.1], [-73.18, -53.02], [-73.2, -53.1], [-73.33, -53.07], [-73.46, -52.99], [-73.35, -53.0], [-73.37, -52.97], [-73.31, -52.93], [-73.24, -52.96], [-73.26, -52.93], [-73.2, -52.9], [-73.56, -52.8], [-73.23, -52.79], [-73.31, -52.72], [-73.15, -52.63], [-73.12, -52.55], [-73.0, -52.56], [-73.12, -52.53], [-73.09, -52.49], [-72.89, -52.52], [-73.14, -52.49], [-73.19, -52.43], [-73.24, -52.5], [-73.16, -52.56], [-73.27, -52.67], [-73.34, -52.65], [-73.31, -52.58], [-73.39, -52.54], [-73.4, -52.64], [-73.51, -52.66], [-73.62, -52.75], [-73.7, -52.71], [-73.57, -52.63], [-73.67, -52.64], [-73.69, -52.6], [-73.55, -52.55], [-73.62, -52.52], [-73.57, -52.48], [-73.49, -52.48], [-73.52, -52.42], [-73.67, -52.42], [-73.56, -52.32], [-73.61, -52.28], [-73.58, -52.21], [-73.68, -52.15], [-73.74, -52.03], [-73.53, -52.2], [-73.47, -52.17], [-73.5, -52.13], [-73.27, -52.22], [-73.2, -52.11], [-73.15, -52.13], [-73.02, -52.06], [-72.99, -52.14], [-73.05, -52.17], [-73.08, -52.24], [-72.99, -52.19], [-72.86, -52.26], [-72.75, -52.06], [-72.84, -52.11], [-72.88, -52.2], [-72.95, -52.17], [-72.95, -52.05], [-72.89, -52.06], [-72.83, -51.94], [-72.7, -51.98], [-72.7, -52.06], [-72.54, -52.2], [-72.57, -52.31], [-72.93, -52.44], [-72.72, -52.41], [-72.52, -52.45], [-72.64, -52.4], [-72.5, -52.32], [-72.47, -52.2], [-72.65, -52.05], [-72.67, -51.96], [-72.45, -51.91], [-72.51, -51.86], [-72.47, -51.79], [-72.52, -51.71], [-72.71, -51.58], [-73.05, -51.49], [-73.08, -51.42], [-73.26, -51.47], [-73.25, -51.51], [-73.05, -51.5], [-73.1, -51.6], [-72.99, -51.53], [-72.55, -51.74], [-72.58, -51.8], [-72.72, -51.84], [-72.83, -51.77], [-72.98, -51.77], [-73.05, -51.7], [-73.15, -51.7], [-73.18, -51.64], [-73.28, -51.61], [-73.22, -51.71], [-73.07, -51.72], [-72.99, -51.79], [-73.11, -51.74], [-73.14, -51.77], [-73.06, -51.77], [-73.05, -51.83], [-73.21, -51.88], [-72.97, -51.82], [-72.92, -51.86], [-73.15, -51.94], [-73.18, -52.08], [-73.22, -52.09], [-73.39, -51.65], [-73.29, -52.1], [-73.32, -52.17], [-73.56, -52.04], [-73.61, -51.93], [-73.58, -51.93], [-73.65, -51.85], [-73.6, -51.82], [-73.4, -52.02], [-73.59, -51.75], [-73.46, -51.69], [-73.55, -51.72], [-73.55, -51.68], [-73.59, -51.72], [-73.65, -51.69], [-73.7, -51.79], [-73.81, -51.69], [-73.71, -51.64], [-73.9, -51.62], [-73.82, -51.54], [-73.92, -51.5], [-73.93, -51.4], [-73.88, -51.37], [-73.7, -51.48], [-73.6, -51.61], [-73.64, -51.54], [-73.6, -51.51], [-73.66, -51.49], [-73.6, -51.43], [-73.69, -51.41], [-73.72, -51.29], [-73.78, -51.23], [-73.76, -51.2], [-73.68, -51.28], [-73.67, -51.19], [-73.73, -51.18], [-73.69, -51.14], [-73.77, -51.12], [-73.76, -51.16], [-73.9, -51.24], [-74.02, -51.11], [-74.05, -51.21], [-74.13, -51.19], [-74.15, -51.07], [-74.07, -50.95], [-74.24, -51.03], [-74.26, -50.94], [-74.15, -50.87], [-73.93, -50.86], [-73.8, -50.96], [-73.79, -50.92], [-73.88, -50.83], [-73.85, -50.8], [-73.75, -50.83], [-73.79, -50.8], [-73.76, -50.66], [-73.64, -50.64], [-73.55, -50.71], [-73.47, -50.67], [-73.73, -50.56], [-73.56, -50.4], [-73.76, -50.52], [-73.82, -50.76], [-73.94, -50.83], [-74.04, -50.82], [-74.13, -50.76], [-74.06, -50.71], [-74.12, -50.69], [-74.15, -50.73], [-74.24, -50.6], [-74.2, -50.56], [-74.3, -50.48], [-74.21, -50.46], [-74.13, -50.59], [-74.15, -50.48], [-73.88, -50.54], [-74.13, -50.42], [-74.02, -50.36], [-74.25, -50.44], [-74.32, -50.38], [-74.26, -50.32], [-74.28, -50.26], [-74.35, -50.36], [-74.44, -50.36], [-74.54, -50.3], [-74.48, -50.25], [-74.69, -50.18], [-74.57, -50.1], [-74.5, -50.13], [-74.5, -50.08], [-74.35, -50.09], [-74.29, -50.13], [-74.32, -50.17], [-74.22, -50.2], [-74.19, -50.26], [-74.12, -50.22], [-73.86, -50.29], [-74.0, -50.24], [-74.01, -50.2], [-74.17, -50.2], [-74.24, -50.08], [-74.36, -49.99], [-74.35, -49.94], [-74.27, -49.93], [-74.14, -50.02], [-73.93, -50.03], [-73.89, -50.08], [-73.91, -50.01], [-74.01, -49.99], [-73.88, -49.92], [-73.91, -49.86], [-74.04, -49.96], [-74.32, -49.87], [-74.35, -49.79], [-74.07, -49.74], [-74.32, -49.72], [-74.32, -49.63], [-74.23, -49.57], [-74.05, -49.54], [-74.02, -49.62], [-73.96, -49.55], [-73.73, -49.78], [-73.69, -49.72], [-73.85, -49.65], [-73.88, -49.53], [-74.09, -49.5], [-74.12, -49.42], [-74.07, -49.26], [-73.84, -49.35], [-73.99, -49.27], [-73.98, -49.16], [-74.04, -49.08], [-73.94, -49.02], [-73.83, -49.03], [-74.06, -49.01], [-74.04, -49.14], [-74.11, -49.22], [-74.19, -49.21], [-74.15, -49.3], [-74.21, -49.52], [-74.42, -49.38], [-74.41, -49.22], [-74.37, -49.19], [-74.41, -49.07], [-74.44, -49.09], [-74.47, -49.03], [-74.4, -48.99], [-74.42, -48.93], [-74.37, -48.93], [-74.43, -48.9], [-74.45, -48.81], [-74.37, -48.72], [-74.33, -48.76], [-74.07, -48.74]], [[-68.64, -54.8], [-68.67, -54.89], [-68.97, -54.78], [-68.74, -54.9], [-69.07, -54.95], [-69.65, -54.82], [-69.68, -54.79], [-69.62, -54.76], [-69.63, -54.69], [-69.68, -54.76], [-69.72, -54.69], [-69.73, -54.8], [-69.77, -54.72], [-69.81, -54.81], [-69.91, -54.82], [-69.97, -54.78], [-69.97, -54.68], [-69.99, -54.84], [-70.09, -54.85], [-70.09, -54.78], [-70.16, -54.85], [-70.31, -54.84], [-70.24, -54.69], [-70.37, -54.84], [-70.58, -54.78], [-70.76, -54.84], [-70.82, -54.82], [-70.83, -54.78], [-70.55, -54.7], [-70.45, -54.63], [-70.49, -54.61], [-70.63, -54.67], [-70.58, -54.69], [-70.64, -54.72], [-70.82, -54.75], [-70.92, -54.71], [-70.77, -54.68], [-70.94, -54.67], [-71.03, -54.78], [-70.95, -54.62], [-71.06, -54.59], [-71.05, -54.66], [-71.1, -54.63], [-71.18, -54.7], [-71.29, -54.68], [-71.19, -54.63], [-71.26, -54.61], [-71.23, -54.53], [-71.3, -54.56], [-71.35, -54.52], [-71.34, -54.57], [-71.41, -54.58], [-71.34, -54.61], [-71.49, -54.69], [-71.52, -54.66], [-71.49, -54.59], [-71.58, -54.65], [-71.56, -54.59], [-71.6, -54.58], [-71.65, -54.66], [-71.69, -54.63], [-71.65, -54.6], [-71.75, -54.59], [-71.82, -54.65], [-71.97, -54.63], [-71.89, -54.57], [-72.0, -54.57], [-72.0, -54.5], [-71.94, -54.51], [-72.0, -54.46], [-71.97, -54.45], [-71.85, -54.54], [-71.67, -54.57], [-71.75, -54.51], [-71.71, -54.51], [-71.58, -54.55], [-71.69, -54.47], [-71.84, -54.47], [-71.85, -54.41], [-71.77, -54.39], [-71.56, -54.51], [-71.49, -54.48], [-71.61, -54.41], [-71.39, -54.46], [-71.32, -54.43], [-71.43, -54.4], [-71.36, -54.37], [-71.09, -54.51], [-71.14, -54.44], [-70.97, -54.44], [-70.95, -54.34], [-70.66, -54.32], [-70.61, -54.34], [-70.73, -54.43], [-70.76, -54.6], [-70.74, -54.55], [-70.63, -54.6], [-70.7, -54.49], [-70.59, -54.39], [-70.25, -54.58], [-70.3, -54.5], [-70.13, -54.55], [-70.43, -54.44], [-70.58, -54.27], [-70.84, -54.26], [-70.9, -54.18], [-70.82, -54.2], [-70.93, -54.11], [-70.14, -54.43], [-70.14, -54.39], [-70.07, -54.37], [-70.2, -54.32], [-70.03, -54.26], [-69.97, -54.3], [-69.97, -54.38], [-69.87, -54.42], [-69.88, -54.5], [-69.79, -54.48], [-69.78, -54.55], [-69.74, -54.48], [-69.88, -54.31], [-69.86, -54.28], [-69.69, -54.32], [-69.54, -54.44], [-69.57, -54.36], [-69.5, -54.34], [-69.23, -54.46], [-69.42, -54.62], [-69.38, -54.68], [-69.37, -54.62], [-69.27, -54.53], [-69.17, -54.58], [-69.16, -54.45], [-68.99, -54.47], [-69.04, -54.41], [-70.06, -54.09], [-70.18, -53.76], [-69.36, -53.52], [-69.32, -53.49], [-69.33, -53.39], [-69.35, -53.36], [-69.68, -53.36], [-70.2, -53.47], [-70.42, -53.38], [-70.47, -53.31], [-70.42, -53.01], [-70.31, -52.97], [-70.34, -53.05], [-70.24, -53.06], [-70.13, -53.01], [-70.09, -52.91], [-70.22, -52.87], [-70.3, -52.91], [-70.26, -52.87], [-70.28, -52.8], [-70.43, -52.77], [-70.13, -52.73], [-70.0, -52.84], [-69.91, -52.85], [-69.73, -52.77], [-69.59, -52.64], [-69.6, -52.52], [-69.42, -52.45], [-69.14, -52.68], [-68.92, -52.64], [-68.77, -52.55], [-68.63, -52.64], [-68.64, -54.78], [-68.71, -54.77], [-68.64, -54.8]], [[-67.5, -55.82], [-67.47, -55.84], [-67.62, -55.92], [-67.63, -55.86], [-67.79, -55.87], [-67.88, -55.89], [-67.9, -55.83], [-67.5, -55.82]], [[-67.38, -55.75], [-67.58, -55.72], [-67.51, -55.65], [-67.41, -55.7], [-67.42, -55.59], [-67.35, -55.58], [-67.32, -55.65], [-67.36, -55.71], [-67.27, -55.72], [-67.25, -55.76], [-67.34, -55.79], [-67.38, -55.75]], [[-68.0, -55.63], [-68.03, -55.66], [-67.99, -55.68], [-68.1, -55.71], [-68.15, -55.6], [-68.29, -55.61], [-68.25, -55.52], [-68.35, -55.48], [-68.5, -55.49], [-68.62, -55.41], [-68.6, -55.46], [-68.8, -55.42], [-68.77, -55.49], [-68.87, -55.51], [-68.97, -55.41], [-68.75, -55.38], [-68.81, -55.36], [-68.76, -55.33], [-68.97, -55.38], [-68.8, -55.19], [-68.99, -55.27], [-69.12, -55.21], [-69.12, -55.15], [-69.13, -55.25], [-69.21, -55.22], [-69.24, -55.13], [-69.44, -55.16], [-69.29, -55.17], [-69.27, -55.23], [-69.48, -55.24], [-69.46, -55.31], [-69.28, -55.32], [-69.31, -55.36], [-69.24, -55.37], [-69.3, -55.43], [-69.14, -55.44], [-69.16, -55.51], [-69.34, -55.47], [-69.36, -55.39], [-69.44, -55.49], [-69.45, -55.41], [-69.52, -55.39], [-69.4, -55.36], [-69.61, -55.37], [-69.76, -55.29], [-69.57, -55.27], [-69.67, -55.25], [-69.5, -55.17], [-69.87, -55.25], [-69.92, -55.22], [-69.85, -55.22], [-69.91, -55.2], [-69.84, -55.17], [-70.03, -55.15], [-69.89, -55.06], [-69.59, -55.04], [-69.58, -55.15], [-69.54, -55.15], [-69.53, -55.03], [-69.33, -55.05], [-69.38, -55.02], [-69.29, -54.99], [-69.2, -55.02], [-68.44, -54.94], [-68.34, -55.01], [-68.33, -55.06], [-68.44, -55.05], [-68.43, -55.08], [-68.51, -55.11], [-68.6, -55.07], [-68.57, -55.14], [-68.62, -55.15], [-69.05, -55.02], [-69.06, -55.06], [-68.79, -55.17], [-68.38, -55.18], [-68.21, -55.26], [-68.5, -55.31], [-68.75, -55.27], [-68.56, -55.33], [-68.6, -55.36], [-68.45, -55.33], [-68.35, -55.34], [-68.32, -55.4], [-68.15, -55.4], [-68.18, -55.46], [-68.06, -55.47], [-68.1, -55.53], [-67.97, -55.59], [-68.0, -55.63]], [[-67.88, -55.24], [-67.74, -55.24], [-67.9, -55.17], [-67.99, -55.22], [-68.14, -55.22], [-68.19, -54.98], [-68.3, -55.0], [-68.36, -54.95], [-68.21, -54.91], [-67.3, -54.93], [-67.06, -55.07], [-67.09, -55.19], [-67.27, -55.31], [-67.45, -55.27], [-67.42, -55.22], [-67.5, -55.17], [-67.61, -55.19], [-67.65, -55.26], [-67.88, -55.24]], [[-70.3, -55.08], [-70.27, -55.11], [-70.34, -55.13], [-70.42, -55.08], [-70.4, -55.11], [-70.45, -55.13], [-70.37, -55.16], [-70.49, -55.21], [-70.54, -55.15], [-70.55, -55.21], [-70.56, -55.14], [-70.51, -55.11], [-70.59, -55.05], [-70.7, -55.13], [-70.75, -55.1], [-70.73, -55.05], [-70.82, -55.09], [-71.01, -55.04], [-70.92, -54.99], [-70.99, -54.95], [-70.56, -54.97], [-70.59, -54.93], [-70.35, -54.89], [-70.49, -54.94], [-70.52, -55.0], [-70.73, -55.01], [-70.31, -55.03], [-70.28, -55.05], [-70.34, -55.07], [-70.3, -55.08]], [[-69.9, -55.0], [-69.95, -54.95], [-69.84, -54.95], [-69.92, -54.91], [-69.89, -54.88], [-69.83, -54.88], [-69.77, -54.96], [-69.7, -54.94], [-69.77, -54.88], [-69.73, -54.86], [-69.51, -54.89], [-69.52, -54.93], [-69.4, -54.9], [-69.21, -54.97], [-69.86, -55.04], [-69.92, -55.04], [-69.9, -55.0]], [[-70.98, -54.93], [-71.15, -54.93], [-71.11, -54.89], [-71.28, -54.87], [-71.35, -54.95], [-71.33, -54.9], [-71.41, -54.94], [-71.46, -54.88], [-71.4, -54.83], [-71.17, -54.83], [-71.08, -54.88], [-70.95, -54.87], [-70.97, -54.91], [-70.91, -54.92], [-70.98, -54.93]], [[-72.3, -54.08], [-72.21, -54.14], [-72.25, -54.2], [-72.32, -54.26], [-72.38, -54.22], [-72.46, -54.26], [-72.52, -54.2], [-72.34, -54.16], [-72.39, -54.13], [-72.3, -54.11], [-72.39, -54.09], [-72.3, -54.08]], [[-71.63, -54.08], [-71.63, -53.96], [-71.55, -53.94], [-71.51, -53.99], [-71.46, -53.94], [-71.4, -54.06], [-71.4, -53.98], [-71.28, -54.01], [-71.29, -54.11], [-71.22, -54.18], [-71.18, -54.09], [-71.16, -54.16], [-71.11, -54.07], [-71.03, -54.09], [-71.06, -54.2], [-71.0, -54.17], [-71.03, -54.24], [-70.99, -54.27], [-71.06, -54.29], [-71.06, -54.33], [-71.16, -54.3], [-71.09, -54.36], [-71.15, -54.38], [-71.18, -54.33], [-71.21, -54.37], [-71.35, -54.31], [-71.21, -54.23], [-71.3, -54.26], [-71.33, -54.2], [-71.35, -54.24], [-71.41, -54.23], [-71.45, -54.19], [-71.37, -54.15], [-71.42, -54.11], [-71.51, -54.14], [-71.48, -54.17], [-71.54, -54.27], [-71.6, -54.23], [-71.55, -54.18], [-71.65, -54.23], [-71.7, -54.17], [-71.6, -54.1], [-71.63, -54.08]], [[-72.02, -54.2], [-72.11, -54.15], [-72.04, -54.14], [-72.12, -54.13], [-72.04, -54.11], [-72.1, -54.06], [-72.21, -54.09], [-72.2, -54.0], [-72.26, -53.93], [-72.13, -53.93], [-72.06, -53.98], [-72.08, -53.95], [-72.04, -53.96], [-71.95, -53.85], [-71.83, -53.92], [-71.85, -53.97], [-71.79, -53.9], [-71.67, -53.92], [-71.79, -54.0], [-71.7, -53.99], [-71.7, -54.03], [-71.77, -54.05], [-71.65, -54.09], [-71.71, -54.15], [-71.81, -54.15], [-71.95, -54.01], [-71.92, -54.12], [-71.74, -54.23], [-71.87, -54.28], [-71.83, -54.33], [-71.99, -54.32], [-71.91, -54.23], [-72.02, -54.2]], [[-70.46, -53.61], [-70.42, -53.87], [-70.45, -53.89], [-70.34, -54.03], [-70.44, -54.06], [-70.67, -53.95], [-70.57, -54.07], [-70.54, -54.22], [-70.69, -54.19], [-70.81, -54.1], [-70.88, -54.03], [-70.88, -53.84], [-70.61, -53.87], [-70.6, -53.83], [-70.7, -53.79], [-70.71, -53.7], [-70.57, -53.63], [-70.54, -53.56], [-70.47, -53.57], [-70.46, -53.61]], [[-73.39, -53.41], [-73.51, -53.48], [-73.39, -53.53], [-73.48, -53.57], [-73.54, -53.51], [-73.58, -53.54], [-73.8, -53.43], [-73.57, -53.49], [-73.62, -53.46], [-73.54, -53.46], [-73.59, -53.39], [-73.39, -53.41]], [[-72.53, -54.08], [-72.57, -54.1], [-72.64, -54.02], [-72.71, -54.1], [-72.84, -54.13], [-72.93, -54.12], [-72.89, -54.08], [-73.01, -54.09], [-72.8, -54.06], [-72.86, -54.02], [-72.76, -54.03], [-72.82, -54.0], [-72.78, -53.98], [-72.85, -53.96], [-72.65, -53.86], [-72.77, -53.87], [-72.73, -53.84], [-72.81, -53.86], [-72.8, -53.82], [-73.01, -53.87], [-73.06, -53.81], [-73.1, -53.93], [-73.04, -53.99], [-73.1, -54.04], [-73.34, -53.96], [-73.24, -53.9], [-73.32, -53.84], [-73.25, -53.79], [-73.31, -53.74], [-73.25, -53.72], [-73.59, -53.76], [-73.48, -53.7], [-73.62, -53.62], [-73.44, -53.56], [-73.26, -53.65], [-72.97, -53.67], [-72.96, -53.63], [-73.08, -53.65], [-73.03, -53.58], [-73.13, -53.65], [-73.26, -53.64], [-73.29, -53.61], [-73.26, -53.56], [-73.34, -53.55], [-73.42, -53.47], [-73.08, -53.53], [-73.18, -53.42], [-73.04, -53.39], [-73.0, -53.49], [-73.02, -53.41], [-72.91, -53.43], [-72.94, -53.52], [-72.87, -53.53], [-72.91, -53.62], [-72.88, -53.68], [-72.82, -53.56], [-72.86, -53.45], [-72.73, -53.52], [-72.68, -53.67], [-72.63, -53.66], [-72.66, -53.54], [-72.46, -53.58], [-72.4, -53.63], [-72.48, -53.67], [-72.45, -53.74], [-72.37, -53.69], [-72.23, -53.73], [-72.27, -53.76], [-72.14, -53.8], [-72.25, -53.88], [-72.37, -53.83], [-72.35, -53.93], [-72.42, -53.9], [-72.37, -53.95], [-72.42, -53.97], [-72.32, -53.99], [-72.33, -54.03], [-72.45, -54.04], [-72.45, -53.99], [-72.52, -53.98], [-72.53, -54.08]], [[-73.21, -53.32], [-73.11, -53.37], [-73.32, -53.35], [-73.42, -53.28], [-73.58, -53.32], [-73.49, -53.29], [-73.58, -53.27], [-73.61, -53.19], [-73.65, -53.21], [-73.73, -53.13], [-73.74, -53.17], [-73.88, -53.06], [-74.06, -53.06], [-74.02, -53.09], [-74.09, -53.1], [-74.25, -53.04], [-74.24, -53.08], [-74.32, -53.1], [-74.33, -53.04], [-74.41, -53.03], [-74.41, -52.97], [-74.6, -52.92], [-74.57, -52.85], [-74.75, -52.76], [-74.7, -52.73], [-74.49, -52.8], [-74.49, -52.84], [-74.37, -52.87], [-74.41, -52.91], [-74.36, -52.95], [-74.19, -52.94], [-74.14, -52.99], [-74.08, -52.96], [-74.13, -52.93], [-74.07, -52.95], [-73.94, -53.0], [-73.96, -53.02], [-73.88, -53.0], [-73.63, -53.15], [-73.66, -53.06], [-73.62, -53.06], [-73.55, -53.12], [-73.58, -53.19], [-73.52, -53.26], [-73.47, -53.22], [-73.5, -53.14], [-73.46, -53.13], [-73.31, -53.24], [-73.37, -53.27], [-73.27, -53.27], [-73.21, -53.32]], [[-73.84, -52.7], [-73.95, -52.71], [-73.84, -52.6], [-73.98, -52.65], [-73.87, -52.55], [-74.14, -52.71], [-74.18, -52.59], [-74.1, -52.57], [-73.94, -52.48], [-74.03, -52.48], [-74.03, -52.43], [-73.73, -52.4], [-73.68, -52.49], [-73.79, -52.55], [-73.75, -52.63], [-73.84, -52.7]], [[-74.67, -52.39], [-74.71, -52.34], [-74.82, -52.35], [-74.81, -52.28], [-74.91, -52.22], [-74.88, -52.19], [-74.83, -52.22], [-74.62, -52.2], [-74.54, -52.25], [-74.59, -52.39], [-74.67, -52.39]], [[-73.77, -52.38], [-73.88, -52.37], [-73.82, -52.34], [-74.09, -52.19], [-74.04, -52.14], [-73.82, -52.24], [-73.77, -52.38]], [[-74.12, -52.4], [-74.25, -52.31], [-74.2, -52.29], [-74.24, -52.25], [-74.21, -52.23], [-74.1, -52.25], [-74.3, -52.15], [-74.39, -52.16], [-74.4, -52.12], [-74.24, -52.11], [-73.94, -52.32], [-74.12, -52.4]], [[-73.71, -52.19], [-73.71, -52.24], [-74.04, -52.01], [-74.11, -51.97], [-74.06, -51.91], [-73.94, -51.97], [-73.76, -52.08], [-73.71, -52.19]], [[-74.75, -52.04], [-74.85, -52.13], [-74.9, -52.11], [-74.78, -52.01], [-74.84, -52.0], [-74.73, -51.84], [-74.73, -51.87], [-74.6, -51.84], [-74.75, -52.04]], [[-74.43, -51.84], [-74.41, -51.81], [-74.5, -51.71], [-74.32, -51.76], [-74.3, -51.82], [-74.18, -51.84], [-74.22, -51.87], [-74.1, -51.88], [-74.17, -51.95], [-74.43, -51.84]], [[-74.89, -52.0], [-74.96, -52.12], [-74.95, -52.06], [-75.01, -52.1], [-74.98, -52.04], [-75.07, -51.98], [-74.97, -51.93], [-75.04, -51.92], [-74.96, -51.82], [-74.87, -51.88], [-74.83, -51.84], [-74.89, -51.77], [-74.84, -51.76], [-74.85, -51.71], [-74.93, -51.64], [-74.87, -51.62], [-74.78, -51.66], [-74.76, -51.78], [-74.89, -52.0]], [[-73.94, -51.74], [-73.93, -51.78], [-74.01, -51.8], [-74.23, -51.71], [-74.14, -51.67], [-74.12, -51.6], [-74.07, -51.6], [-74.1, -51.55], [-74.06, -51.55], [-73.99, -51.66], [-74.01, -51.71], [-73.94, -51.74]], [[-75.02, -51.33], [-75.02, -51.41], [-75.07, -51.4], [-75.12, -51.47], [-75.16, -51.43], [-75.14, -51.57], [-75.22, -51.55], [-75.21, -51.6], [-75.31, -51.63], [-75.31, -51.54], [-75.23, -51.49], [-75.19, -51.38], [-75.22, -51.31], [-75.13, -51.27], [-75.15, -51.37], [-75.1, -51.3], [-75.02, -51.33]], [[-74.74, -51.37], [-74.8, -51.43], [-75.02, -51.46], [-74.79, -51.32], [-74.92, -51.36], [-74.95, -51.32], [-74.72, -51.19], [-74.56, -51.25], [-74.55, -51.28], [-74.63, -51.26], [-74.54, -51.37], [-74.62, -51.41], [-74.69, -51.28], [-74.74, -51.3], [-74.74, -51.37]], [[-74.42, -51.11], [-74.39, -51.14], [-74.42, -51.21], [-74.57, -51.15], [-74.61, -51.08], [-74.5, -51.02], [-74.45, -51.05], [-74.52, -51.1], [-74.42, -51.11]], [[-74.39, -50.98], [-74.4, -51.09], [-74.48, -50.99], [-74.73, -51.11], [-74.75, -51.04], [-74.68, -51.01], [-74.77, -50.99], [-74.83, -51.08], [-74.89, -51.06], [-74.84, -50.97], [-74.88, -50.97], [-74.96, -50.97], [-74.95, -50.93], [-74.9, -50.92], [-74.93, -50.89], [-74.66, -50.93], [-74.58, -50.89], [-74.66, -50.87], [-74.56, -50.82], [-74.66, -50.73], [-74.4, -50.84], [-74.43, -50.93], [-74.39, -50.98]], [[-74.91, -50.8], [-74.96, -50.73], [-74.84, -50.75], [-74.9, -50.68], [-74.83, -50.71], [-74.8, -50.67], [-74.74, -50.71], [-74.72, -50.8], [-74.78, -50.8], [-74.74, -50.82], [-74.72, -50.86], [-74.67, -50.81], [-74.68, -50.87], [-74.78, -50.88], [-74.93, -50.85], [-74.86, -50.82], [-74.91, -50.8]], [[-75.13, -50.49], [-75.12, -50.53], [-75.22, -50.56], [-75.22, -50.6], [-75.35, -50.56], [-75.27, -50.62], [-75.3, -50.65], [-75.26, -50.67], [-75.29, -50.78], [-75.34, -50.74], [-75.46, -50.76], [-75.41, -50.69], [-75.51, -50.66], [-75.36, -50.59], [-75.47, -50.49], [-75.4, -50.46], [-75.35, -50.5], [-75.33, -50.47], [-75.13, -50.49]], [[-74.31, -50.83], [-74.37, -50.83], [-74.4, -50.75], [-74.52, -50.73], [-74.58, -50.63], [-74.42, -50.53], [-74.67, -50.47], [-74.55, -50.42], [-74.48, -50.48], [-74.38, -50.46], [-74.24, -50.68], [-74.43, -50.65], [-74.19, -50.76], [-74.2, -50.85], [-74.27, -50.79], [-74.31, -50.83]], [[-75.04, -50.29], [-75.22, -50.44], [-75.32, -50.4], [-75.19, -50.3], [-75.45, -50.36], [-75.37, -50.15], [-75.26, -50.16], [-75.35, -50.2], [-75.27, -50.25], [-75.15, -50.25], [-75.12, -50.14], [-75.22, -50.16], [-75.39, -50.07], [-75.39, -50.03], [-75.31, -50.0], [-75.27, -50.07], [-75.13, -50.03], [-75.13, -50.08], [-75.05, -50.13], [-74.95, -50.08], [-75.07, -50.19], [-74.8, -50.13], [-74.81, -50.21], [-74.94, -50.22], [-75.04, -50.29]], [[-75.45, -49.77], [-75.62, -49.86], [-75.63, -49.76], [-75.51, -49.72], [-75.61, -49.64], [-75.5, -49.56], [-75.36, -49.61], [-75.21, -49.79], [-75.18, -49.91], [-75.26, -49.83], [-75.27, -49.9], [-75.34, -49.86], [-75.37, -49.72], [-75.45, -49.77]], [[-74.9, -49.08], [-74.94, -49.28], [-75.06, -49.17], [-75.2, -49.17], [-75.16, -49.13], [-75.23, -49.12], [-75.1, -49.05], [-75.13, -49.02], [-74.9, -49.08]], [[-75.56, -49.25], [-75.66, -49.21], [-75.62, -49.21], [-75.61, -49.15], [-75.45, -49.1], [-75.39, -49.0], [-75.34, -48.99], [-75.35, -49.05], [-75.29, -49.09], [-75.32, -49.13], [-75.4, -49.19], [-75.42, -49.13], [-75.49, -49.26], [-75.56, -49.25]], [[-75.22, -49.01], [-75.23, -49.07], [-75.28, -49.06], [-75.32, -48.95], [-75.37, -48.95], [-75.47, -49.04], [-75.52, -49.03], [-75.47, -48.95], [-75.57, -48.99], [-75.66, -48.95], [-75.6, -48.86], [-75.47, -48.84], [-75.51, -48.91], [-75.39, -48.83], [-75.43, -48.88], [-75.36, -48.92], [-75.38, -48.85], [-75.31, -48.86], [-75.22, -49.01]], [[-75.2, -49.77], [-75.3, -49.63], [-75.24, -49.56], [-75.32, -49.55], [-75.26, -49.49], [-75.34, -49.51], [-75.33, -49.46], [-75.37, -49.47], [-75.36, -49.43], [-75.42, -49.41], [-75.47, -49.32], [-75.38, -49.28], [-75.17, -49.5], [-75.32, -49.32], [-75.31, -49.25], [-75.15, -49.38], [-75.09, -49.37], [-75.19, -49.29], [-75.11, -49.32], [-75.11, -49.27], [-75.04, -49.26], [-75.09, -49.2], [-74.89, -49.36], [-74.89, -49.25], [-74.84, -49.24], [-74.86, -49.11], [-74.8, -49.1], [-74.95, -49.01], [-74.86, -48.98], [-74.82, -49.01], [-74.82, -48.95], [-74.97, -48.99], [-74.95, -48.92], [-75.02, -48.89], [-74.87, -48.84], [-75.01, -48.87], [-75.06, -48.84], [-75.03, -48.79], [-74.94, -48.83], [-75.01, -48.77], [-74.83, -48.69], [-74.79, -48.75], [-74.76, -48.68], [-74.62, -48.72], [-74.67, -48.86], [-74.61, -48.84], [-74.6, -48.74], [-74.53, -48.72], [-74.56, -48.9], [-74.48, -48.95], [-74.53, -49.03], [-74.46, -49.12], [-74.45, -49.3], [-74.54, -49.52], [-74.5, -49.59], [-74.56, -49.63], [-74.59, -49.72], [-74.51, -49.62], [-74.43, -49.66], [-74.42, -49.74], [-74.54, -49.75], [-74.43, -49.79], [-74.44, -49.84], [-74.45, -49.88], [-74.48, -49.84], [-74.52, -49.86], [-74.47, -49.91], [-74.49, -49.95], [-74.61, -49.91], [-74.54, -49.99], [-74.64, -50.05], [-74.69, -50.04], [-74.67, -49.99], [-74.77, -50.05], [-74.8, -49.99], [-74.87, -50.02], [-74.74, -49.92], [-74.66, -49.95], [-74.73, -49.9], [-74.9, -49.95], [-74.89, -49.87], [-74.73, -49.84], [-74.82, -49.85], [-74.77, -49.77], [-74.88, -49.8], [-74.87, -49.73], [-74.92, -49.68], [-74.84, -49.69], [-74.89, -49.61], [-74.71, -49.64], [-74.77, -49.62], [-74.76, -49.58], [-74.83, -49.6], [-74.89, -49.55], [-74.78, -49.48], [-74.74, -49.52], [-74.75, -49.46], [-74.66, -49.43], [-74.74, -49.43], [-74.65, -49.35], [-74.75, -49.4], [-74.81, -49.38], [-74.75, -49.42], [-74.94, -49.54], [-74.99, -49.48], [-75.0, -49.58], [-75.04, -49.59], [-75.01, -49.68], [-74.95, -49.64], [-75.02, -49.74], [-74.96, -49.79], [-75.04, -49.83], [-75.01, -49.9], [-75.13, -49.86], [-75.2, -49.77]], [[-73.82, -51.86], [-73.74, -51.83], [-73.7, -51.91], [-73.71, -52.0], [-73.81, -51.98], [-73.98, -51.84], [-73.9, -51.8], [-73.82, -51.86]], [[-74.97, -50.29], [-74.89, -50.29], [-75.04, -50.48], [-75.17, -50.46], [-75.17, -50.43], [-74.97, -50.29]]] }];
+    // estaciones (valores anuales aproximados, solo ilustrativos)
+    const ST = [
+      ['Arica Chacalluta', -18.35, -70.34, 1, 'CLAP'], ['Iquique Diego Aracena', -20.55, -70.18, 1, 'CLTA'], ['Calama El Loa', -22.50, -68.90, 5, 'CLAN'],
+      ['Antofagasta Cerro Moreno', -23.45, -70.44, 3, 'CLAN'], ['Copiapó Desierto de Atacama', -27.26, -70.78, 12, 'CLAT'], ['La Serena La Florida', -29.92, -71.20, 80, 'CLCO'],
+      ['Valparaíso Rodelillo', -33.07, -71.55, 370, 'CLVS'], ['Santiago Quinta Normal', -33.44, -70.68, 310, 'CLRM'], ['Curicó General Freire', -34.97, -71.22, 600, 'CLML'],
+      ['Chillán Bernardo O\'Higgins', -36.58, -72.04, 1000, 'CLNB'], ['Concepción Carriel Sur', -36.78, -73.06, 1100, 'CLBI'], ['Temuco Maquehue', -38.77, -72.64, 1150, 'CLAR'],
+      ['Valdivia Pichoy', -39.65, -73.08, 1700, 'CLLR'], ['Osorno Cañal Bajo', -40.61, -73.06, 1300, 'CLLL'], ['Puerto Montt El Tepual', -41.44, -73.09, 1800, 'CLLL'],
+      ['Puerto Aysén', -45.40, -72.68, 2900, 'CLAI'], ['Coyhaique Teniente Vidal', -45.59, -72.11, 1100, 'CLAI'], ['Punta Arenas', -53.00, -70.85, 430, 'CLMA'],
+    ];
+    const PROJ = { lon0: -76, lat0: -17, k: 15.4, c: Math.cos(35 * Math.PI / 180) };
+    const px = (lon, lat) => [(lon - PROJ.lon0) * PROJ.k * PROJ.c, (PROJ.lat0 - lat) * PROJ.k];
+    const MAP_W = 9.2 * PROJ.k * PROJ.c, MAP_H = 39.2 * PROJ.k;
+    function drawChile(svg, cls) {
+      svg.setAttribute('viewBox', `-2 -2 ${MAP_W + 4} ${MAP_H + 4}`);
+      svg.innerHTML = '';
+      const ns = 'http://www.w3.org/2000/svg', paths = {};
+      CHILE.forEach(r => {
+        const d = r.rings.map(ring => 'M' + ring.map(([lo, la]) => px(lo, la).map(v => v.toFixed(1)).join(',')).join('L') + 'Z').join('');
+        const p = document.createElementNS(ns, 'path'); p.setAttribute('d', d); if (cls) p.setAttribute('class', cls);
+        p.dataset.id = r.id; svg.appendChild(p); paths[r.id] = p;
+      });
+      return paths;
+    }
+    function cssv(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+    function ramp(t) { // t∈[0,1] → azul claro → azul oscuro
+      const a = [232, 241, 251], b = [8, 48, 107], m = [66, 146, 198];
+      const lerp = (x, y, u) => x.map((v, i) => Math.round(v + (y[i] - v) * u));
+      const c = t < .5 ? lerp(a, m, t * 2) : lerp(m, b, (t - .5) * 2);
+      return `rgb(${c.join(',')})`;
+    }
+    const logT = (v, max) => Math.log10(1 + v) / Math.log10(1 + max);
+    let refreshColors = () => { };
+    (function () {
+      const svg = $('#stMap'), paths = drawChile(svg);
+      Object.values(paths).forEach(p => { p.style.fill = 'var(--bg-soft)'; });
+      const ns = 'http://www.w3.org/2000/svg';
+      let metric = 'd';
+      const val = s => metric === 'd' ? s[3] / 365 : s[3];
+      const fmt = v => metric === 'd' ? v.toFixed(2) : Math.round(v).toString();
+      const unit = () => metric === 'd' ? 'mm/día' : 'mm/año';
+      const dots = ST.map((s, i) => {
+        const [x, y] = px(s[2], s[1]);
+        const c = document.createElementNS(ns, 'circle'); c.setAttribute('cx', x); c.setAttribute('cy', y);
+        c.setAttribute('stroke', '#000'); c.setAttribute('stroke-width', '.6'); c.style.cursor = 'pointer';
+        c.onmousemove = e => { showTip(e, `<b>${esc(s[0])}</b><br>${fmt(val(s))} ${unit()}`); hl(i); };
+        c.onmouseleave = () => { hideTip(); hl(-1); };
+        svg.appendChild(c); return c;
+      });
+      function hl(i) { $$('#stBars .b').forEach((b, j) => b.style.background = j === i ? 'var(--hit)' : ''); dots.forEach((d, j) => d.setAttribute('stroke-width', j === i ? '2' : '.6')); }
+      function draw() {
+        const max = Math.max(...ST.map(val));
+        ST.forEach((s, i) => { const t = logT(val(s), max); dots[i].setAttribute('r', 3 + t * 5); dots[i].setAttribute('fill', ramp(t)); });
+        $('#stBars').innerHTML = ST.map((s, i) => `<div class="b" data-i="${i}"><span class="lbl" title="${esc(s[0])}">${esc(s[0])}</span><div><div class="bar" style="width:${(val(s) / max * 100).toFixed(1)}%;background:${ramp(logT(val(s), max))}"></div></div><span class="v">${fmt(val(s))}</span></div>`).join('');
+        $$('#stBars .b').forEach(b => { b.onmouseenter = () => hl(+b.dataset.i); b.onmouseleave = () => hl(-1); });
+        $('#stMin').textContent = '0'; $('#stMax').textContent = fmt(max) + ' ' + unit();
+        $('#stRamp').style.background = `linear-gradient(90deg, ${ramp(0)}, ${ramp(.5)}, ${ramp(1)})`;
+        $('#stCode').innerHTML = hlPy(metric === 'd'
+          ? "promedios[c] = df['total'].mean()                      # media de los días"
+          : "anual = df.groupby('año')['total'].sum()           # mm por año\npromedios[c] = anual.mean()                        # media de los años");
+      }
+      $$('#w-map .wh .tabs button').forEach(b => b.onclick = () => { metric = b.dataset.m; $$('#w-map .wh .tabs button').forEach(x => x.classList.toggle('on', x === b)); draw(); });
+      draw();
+    })();
+
+    /* ---------- §6.1 descarga ---------- */
+    (function () {
+      const list = ST.map(s => ({ n: s[0], ok: true }));
+      ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].forEach((L, i) => list.splice(2 + i * 3, 0, { n: `Estación auxiliar ${L}`, ok: false }));
+      let running = false;
+      function reset() { $('#dlOk').textContent = $('#dlErr').textContent = $('#dlFiles').textContent = 0; $('#dlBar').style.width = 0; $('#dlTqdm').textContent = `0%|          | 0/${list.length} [00:00<?, ?it/s]`; $('#dlLog').innerHTML = '<span class="muted">…</span>'; }
+      $('#dlReset').onclick = () => { if (!running) reset(); };
+      $('#dlRun').onclick = async () => {
+        if (running) return; running = true; reset(); $('#dlLog').innerHTML = '';
+        let ok = 0, err = 0; const N = list.length, perIt = 7.4;
+        for (let i = 0; i < N; i++) {
+          const s = list[i]; await sleep(140);
+          s.ok ? ok++ : err++;
+          $('#dlOk').textContent = ok; $('#dlErr').textContent = err; $('#dlFiles').textContent = i + 1;
+          const pct = Math.round((i + 1) / N * 100), bars = Math.round((i + 1) / N * 10);
+          const el = Math.round((i + 1) * perIt), mm = String(Math.floor(el / 60)).padStart(2, '0'), ss = String(el % 60).padStart(2, '0');
+          $('#dlTqdm').textContent = `${String(pct).padStart(3)}%|${'█'.repeat(bars)}${' '.repeat(10 - bars)}| ${i + 1}/${N} [${mm}:${ss}, ${perIt}s/it]`;
+          $('#dlBar').style.width = pct + '%';
+          const d = document.createElement('div'); d.className = s.ok ? 'o' : 'e';
+          d.textContent = s.ok ? `✓ data/${s.n.replace(/ /g, '_')}_data.json` : `✗ ${s.n}: Falta la clave 'datosHistoricos' → error_log.txt`;
+          $('#dlLog').appendChild(d); $('#dlLog').scrollTop = 1e6;
+        }
+        const d = document.createElement('div'); d.innerHTML = `<b>len(estaciones) → ${ok}</b> <span class="muted">(en los datos reales, solo alrededor de 1/5 de las estaciones del catastro trae datos)</span>`; $('#dlLog').appendChild(d); $('#dlLog').scrollTop = 1e6;
+        running = false;
+      };
+      reset();
+    })();
+
+    /* ---------- §6.3 NaN ---------- */
+    (function () {
+      const base = [{ n: 'Quinta Normal', v: 45.0 }, { n: 'Valdivia', v: NaN }, { n: 'Temuco', v: 30.1 }, { n: 'Arica', v: NaN }, { n: 'Pto. Montt', v: 62.4 }, { n: 'La Serena', v: 12.3 }];
+      let arr = [...base], i = 0, best = null, trace = [];
+      const f = v => isNaN(v) ? 'nan' : v.toFixed(1);
+      function draw() {
+        $('#nanChips').innerHTML = arr.map((x, j) => `<div class="c ${isNaN(x.v) ? 'nan' : ''} ${j === i - 1 ? 'cur' : ''} ${best === j ? 'best' : ''}"><div class="small muted" style="font-family:system-ui">${esc(x.n)}</div>${f(x.v)}</div>`).join('');
+        $('#nanTrace').innerHTML = trace.length ? trace.join('\n') : '<span class="muted">mejor = valores[0]; luego, para cada x: if x &gt; mejor: mejor = x</span>';
+        const done = i >= arr.length;
+        $('#nanPy').innerHTML = done ? `<span class="${isNaN(arr[best].v) ? 'err-text' : ''}">${f(arr[best].v)}</span>` : '?';
+        const vs = arr.map(x => x.v).filter(v => !isNaN(v));
+        $('#nanPd').textContent = done ? Math.max(...vs).toFixed(1) : '?';
+        $('#nanStep').disabled = done;
+      }
+      function step() {
+        if (i >= arr.length) return;
+        const x = arr[i];
+        if (i === 0) { best = 0; trace.push(`mejor = ${f(x.v)}   <span class="muted">(${esc(x.n)}, primer elemento)</span>`); }
+        else {
+          const cmp = x.v > arr[best].v;
+          trace.push(`¿${f(x.v)} &gt; ${f(arr[best].v)}? → <b class="${cmp ? '' : (isNaN(x.v) || isNaN(arr[best].v) ? 'err-text' : '')}">${cmp}</b>` + (cmp ? `   → mejor = ${f(x.v)}` : (isNaN(x.v) || isNaN(arr[best].v) ? '   <span class="muted">(comparar con NaN siempre da False)</span>' : '')));
+          if (cmp) best = i;
+        }
+        i++; draw();
+      }
+      function reset(a) { arr = a; i = 0; best = null; trace = []; draw(); }
+      $('#nanStep').onclick = step;
+      $('#nanRun').onclick = async () => { while (i < arr.length) { step(); await sleep(350); } };
+      $('#nanShuffle').onclick = () => { const a = [...base]; for (let k = a.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1));[a[k], a[j]] = [a[j], a[k]]; } reset(a); };
+      $('#nanFirst').onclick = () => { const a = [...base].sort((x, y) => (isNaN(y.v) - isNaN(x.v))); reset(a); };
+      reset([...base]);
+    })();
+
+    /* ---------- §6.4 coroplético ---------- */
+    (function () {
+      const BASE = { CLAP: 5, CLTA: 8, CLAN: 4, CLAT: 25, CLCO: 90, CLVS: 350, CLRM: 300, CLLI: 500, CLML: 750, CLNB: 1000, CLBI: 1100, CLAR: 1250, CLLR: 1800, CLLL: 1900, CLAI: 1500, CLMA: 450 };
+      const SHORT = { CLAP: 'Arica y Parinacota', CLTA: 'Tarapacá', CLAN: 'Antofagasta', CLAT: 'Atacama', CLCO: 'Coquimbo', CLVS: 'Valparaíso', CLRM: 'Metropolitana', CLLI: "O'Higgins", CLML: 'Maule', CLNB: 'Ñuble', CLBI: 'Biobío', CLAR: 'La Araucanía', CLLR: 'Los Ríos', CLLL: 'Los Lagos', CLAI: 'Aysén', CLMA: 'Magallanes' };
+      const ORDER = Object.keys(SHORT);
+      const hash = s => { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 9973; return h / 9973; };
+      const val = (id, y) => Math.round(BASE[id] * (0.7 + 0.6 * hash(id + y)) * (y === 2021 ? 0.6 : 1));
+      const MAX = 3000;
+      const svg = $('#chMap'), paths = drawChile(svg, 'reg');
+      let year = 2024;
+      Object.entries(paths).forEach(([id, p]) => {
+        p.onmousemove = e => showTip(e, `<b>${esc(SHORT[id])}</b><br>${year}: ${val(id, year)} mm/año`);
+        p.onmouseleave = hideTip;
+      });
+      $('#chRamp').style.background = `linear-gradient(90deg, ${ramp(0)}, ${ramp(.5)}, ${ramp(1)})`;
+      $('#chMax').textContent = MAX;
+      function draw() {
+        $('#chYv').textContent = year;
+        Object.entries(paths).forEach(([id, p]) => { p.style.fill = ramp(logT(val(id, year), MAX)); p.style.transition = 'fill .4s'; });
+        $('#chBars').innerHTML = ORDER.map(id => { const v = val(id, year); return `<div class="b"><span class="lbl">${esc(SHORT[id])}</span><div><div class="bar" style="width:${Math.min(100, v / MAX * 100).toFixed(1)}%;background:${ramp(logT(v, MAX))}"></div></div><span class="v">${v}</span></div>`; }).join('')
+          + (year === 2021 ? '<p class="small muted">2021 simulado como año seco (megasequía en la zona central).</p>' : '');
+      }
+      $('#chY').oninput = e => { year = +e.target.value; draw(); };
+      let playing = false;
+      $('#chPlay').onclick = async () => {
+        if (playing) { playing = false; return; }
+        playing = true; $('#chPlay').textContent = '⏸ Pausa';
+        while (playing) { year = year >= 2024 ? 2020 : year + 1; $('#chY').value = year; draw(); await sleep(1100); }
+        $('#chPlay').textContent = '▶ Animar';
+      };
+      draw();
+    })();
+
+    /* ---------- KaTeX ---------- */
+    window.addEventListener('load', () => {
+      if (window.renderMathInElement) renderMathInElement(document.body, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false }], ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] });
+    });
+  </script>
+</body>
+
+</html>
