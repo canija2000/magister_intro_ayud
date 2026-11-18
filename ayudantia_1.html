@@ -1421,7 +1421,7 @@
       <section id="html">
         <h2><span class="num">2</span> ¿Qué es HTML?</h2>
         <div class="callout def">
-          <div class="ct">📘 Definición</div>
+          <div class="ct">Definición</div>
           <p><b>HTML</b> (<em>HyperText Markup Language</em>) es el lenguaje de marcado que estructura el contenido de
             una página web. Está formado por <b>etiquetas</b> (<code>&lt;h1&gt;</code>, <code>&lt;p&gt;</code>,
             <code>&lt;div&gt;</code>, …) que se anidan unas dentro de otras y forman un <b>árbol</b>, llamado
@@ -1480,7 +1480,7 @@
       <section id="http">
         <h2><span class="num">3</span> Protocolos: HTTP y HTTPS</h2>
         <div class="callout def">
-          <div class="ct">📘 Definición</div>
+          <div class="ct">Definición</div>
           <p><b>HTTP</b> (<em>HyperText Transfer Protocol</em>) es el conjunto de reglas con que un <b>cliente</b> (tu
             navegador o tu script de Python) le pide algo a un <b>servidor</b> (otro computador) y recibe una respuesta.
             <b>HTTPS</b> es lo mismo, pero con el mensaje cifrado.
@@ -1585,7 +1585,7 @@
       <section id="scraping">
         <h2><span class="num">4</span> Webscraping</h2>
         <div class="callout def">
-          <div class="ct">📘 Definición</div>
+          <div class="ct">Definición</div>
           <p><b>Webscraping</b> es la técnica para <b>extraer información de sitios web de forma automatizada</b> cuando
             no existe otra forma de obtenerla (por ejemplo, una API). Consiste en (1) descargar el HTML con un
             <code>GET</code> y (2) recorrer su árbol buscando etiquetas y atributos.
@@ -1679,7 +1679,7 @@ soup = BeautifulSoup(response.text, 'html.parser') # 2. texto → árbol navegab
         </div>
 
         <div class="callout tip">
-          <div class="ct">💡 Para leer un selector</div>
+          <div class="ct">Para leer un selector</div>
           <p>Se lee de izquierda a derecha: <code>p.star-rating</code> = "<b>un</b> <code>&lt;p&gt;</code> <b>que
               tenga</b> la clase <code>star-rating</code>". Un <b>espacio</b> significa "dentro de":
             <code>article.product_pod h3 a</code> = "los <code>&lt;a&gt;</code> que están dentro de un
@@ -1720,7 +1720,7 @@ soup = BeautifulSoup(response.text, 'html.parser') # 2. texto → árbol navegab
         </div>
 
         <div class="callout warn">
-          <div class="ct">⚠️ ¿Por qué <code>[2:]</code> en el precio?</div>
+          <div class="ct">¿Por qué <code>[2:]</code> en el precio?</div>
           <p>books.toscrape no dice en qué <em>encoding</em> viene su HTML, así que <code>requests</code> asume
             <code>ISO-8859-1</code>. El símbolo <code>£</code> (2 bytes en UTF-8) se lee como <b>dos</b> caracteres:
             <code>Â£</code>. Por eso <code>[2:]</code> funciona… <b>por accidente</b>. Cambia el selector
@@ -1813,7 +1813,7 @@ df_2.shape</pre>
         <pre class="out">(1000, 4)</pre>
 
         <div class="callout tip">
-          <div class="ct">💡 Buenas prácticas</div>
+          <div class="ct">Buenas prácticas</div>
           <p>Si hacemos muchos requests seguidos, conviene revisar <code>response.status_code == 200</code> antes de
             parsear y agregar una pausa (<code>time.sleep(0.5)</code>) para no saturar el servidor. En sitios reales,
             revisen además el archivo <code>/robots.txt</code> y los términos de uso.</p>
@@ -1875,7 +1875,7 @@ df_2.shape</pre>
       <section id="apis">
         <h2><span class="num">5</span> APIs</h2>
         <div class="callout def">
-          <div class="ct">📘 Definición</div>
+          <div class="ct">Definición</div>
           <p>Una <b>API</b> (<em>Application Programming Interface</em>) es una "puerta" que un servicio deja abierta
             para que <b>otros programas</b> le pidan datos ya estructurados (normalmente en <b>JSON</b>), sin pasar por
             el HTML pensado para humanos. Cada URL que responde algo distinto es un <b>endpoint</b>.</p>
@@ -1927,8 +1927,8 @@ df_2.shape</pre>
                 class="u-path">ruta / endpoint</span><span class="u-param">parámetro de ruta</span><span
                 class="u-query">query params (?clave=valor&amp;…)</span>
             </div>
-            <div class="tabs" style="margin-top:.9rem"><button class="on" data-t="bad">❌ token en el
-                notebook</button><button data-t="good">✅ token en .env</button></div>
+            <div class="tabs" style="margin-top:.9rem"><button class="on" data-t="bad">token en el
+                notebook</button><button data-t="good">token en .env</button></div>
             <div id="uCode2"></div>
           </div>
         </div>
@@ -2084,7 +2084,7 @@ df2 = (plano.unstack('campo')                       # 'campo' pasa a columnas
         </details>
 
         <div class="callout tip">
-          <div class="ct">💡 ¿Cuál conviene? → <code>json_normalize</code> desde <code>diaria</code></div>
+          <div class="ct">¿Cuál conviene? → <code>json_normalize</code> desde <code>diaria</code></div>
           <p>Las dos llegan al <b>mismo DataFrame</b>, pero <code>json_normalize</code> lo hace en 3 líneas, sin loops
             anidados
             ni diccionarios armados a mano. Hay menos lugares donde equivocarse y se lee mejor. El truco es elegir
@@ -2204,7 +2204,7 @@ for nombre, codigo in estacion_codigo.items():
         <div class="widget" id="w-nan">
           <div class="wh"><span class="tag">Interactivo</span> Ejecutar <code>max()</code> paso a paso</div>
           <div class="wb">
-            <div class="row"><button id="nanShuffle">🔀 Mezclar orden</button><button id="nanFirst">NaN
+            <div class="row"><button id="nanShuffle">Mezclar orden</button><button id="nanFirst">NaN
                 primero</button><button class="primary" id="nanStep">Paso ▶</button><button id="nanRun">Ejecutar
                 todo</button></div>
             <div class="chips" id="nanChips"></div>
@@ -2386,7 +2386,7 @@ chile_anual.plot(column=2024, cmap='Blues', legend=True)</pre>
       $$('.opts button', q).forEach((b, i) => b.onclick = () => {
         $$('.opts button', q).forEach(x => x.classList.remove('right', 'wrong'));
         b.classList.add(i === ans ? 'right' : 'wrong');
-        fb.textContent = i === ans ? '✅ ' + fb.dataset.ok : '❌ ' + fb.dataset.bad;
+        fb.textContent = i === ans ? '' + fb.dataset.ok : '' + fb.dataset.bad;
       });
     });
 
@@ -2641,14 +2641,14 @@ chile_anual.plot(column=2024, cmap='Blues', legend=True)</pre>
       const steps = [
         {
           code: "titulo = book.h3.a['title']", el: a => [a.querySelector('h3 a')], val: a => {
-            const x = a.querySelector('h3 a'); return `book.h3        → &lt;h3&gt;…&lt;/h3&gt;\nbook.h3.a      → &lt;a href="…" title="…"&gt;\nbook.h3.a.text → <span class="tk-s">"${esc(x.textContent)}"</span>   <span class="muted">(¡cortado!)</span>\nbook.h3.a['title'] → <span class="tk-s">"${esc(x.title)}"</span>  ✅`;
+            const x = a.querySelector('h3 a'); return `book.h3        → &lt;h3&gt;…&lt;/h3&gt;\nbook.h3.a      → &lt;a href="…" title="…"&gt;\nbook.h3.a.text → <span class="tk-s">"${esc(x.textContent)}"</span>   <span class="muted">(¡cortado!)</span>\nbook.h3.a['title'] → <span class="tk-s">"${esc(x.title)}"</span>  `;
           }
         },
         {
           code: "precio = book.find('p', class_='price_color').text.strip()[2:]", el: a => [a.querySelector('.price_color')], val: a => {
             const raw = a.querySelector('.price_color').textContent; const txt = enc.value === 'latin' ? 'Â' + raw : raw; const cut = txt.slice(2);
             const ok = !isNaN(parseFloat(cut)) && cut === raw.slice(1);
-            return `.text          → <span class="tk-s">"${esc(txt)}"</span>   <span class="muted">${enc.value === 'latin' ? '(£ mal decodificado como 2 caracteres: Â + £)' : '(decodificado correctamente)'}</span>\n.strip()[2:]   → <span class="tk-s">"${esc(cut)}"</span>\nfloat(precio)  → <b class="${ok ? '' : 'err-text'}">${parseFloat(cut)}</b> ${ok ? '✅' : '❌ ¡se comió el primer dígito!'}`;
+            return `.text          → <span class="tk-s">"${esc(txt)}"</span>   <span class="muted">${enc.value === 'latin' ? '(£ mal decodificado como 2 caracteres: Â + £)' : '(decodificado correctamente)'}</span>\n.strip()[2:]   → <span class="tk-s">"${esc(cut)}"</span>\nfloat(precio)  → <b class="${ok ? '' : 'err-text'}">${parseFloat(cut)}</b> ${ok ? '' : '¡se comió el primer dígito!'}`;
           }
         },
         {
@@ -2850,7 +2850,7 @@ chile_anual.plot(column=2024, cmap='Blues', legend=True)</pre>
       const LEVELS = [
         { code: 'data_santiago', obj: SAMPLE, note: 'Mezcla metadatos de la estación con los datos diarios, y los nombres de columna son largos. Con datos reales: <b>1 fila × 33.431 columnas</b>.' },
         { code: 'data_santiago["datosHistoricos"]', obj: SAMPLE.datosHistoricos, note: 'Ya no aparecen los metadatos, pero todavía arrastramos el prefijo <code>diaria.</code> en cada columna.' },
-        { code: 'diaria', obj: diaria, note: '✅ Nivel justo: cada nombre de columna es la <b>dirección</b> del valor, <code>año.mes.día.campo</code>. Separándolo obtenemos las columnas que queremos.' },
+        { code: 'diaria', obj: diaria, note: 'Nivel justo: cada nombre de columna es la <b>dirección</b> del valor, <code>año.mes.día.campo</code>. Separándolo obtenemos las columnas que queremos.' },
       ];
       let lvl = 2, ns = 0;
       const lvBox = $('#normLevels');
@@ -2881,7 +2881,7 @@ chile_anual.plot(column=2024, cmap='Blues', legend=True)</pre>
           tbl: () => `<thead><tr><th></th><th>año</th><th>mes</th><th>día</th><th>parcial</th><th>total</th><th>traza</th></tr></thead><tbody>${final.map((r, i) => `<tr><td>${i}</td><td>'${r.año}'</td><td>'${r.mes}'</td><td>'${r.día}'</td><td>${r.parcial}</td><td>${r.total}</td><td>${r.traza}</td></tr>`).join('')}</tbody>`
         },
         {
-          t: 'df2  (DataFrame final)', shape: `(${final.length}, 6)`, explain: '<code>.astype(int)</code> convierte año, mes y día a enteros, y <code>sort_values</code> ordena cronológicamente (como texto, <code>"10"</code> quedaría antes que <code>"2"</code>). <b>✅ Es el mismo DataFrame que con los tres for.</b>',
+          t: 'df2  (DataFrame final)', shape: `(${final.length}, 6)`, explain: '<code>.astype(int)</code> convierte año, mes y día a enteros, y <code>sort_values</code> ordena cronológicamente (como texto, <code>"10"</code> quedaría antes que <code>"2"</code>). <b>Es el mismo DataFrame que con los tres for.</b>',
           tbl: () => `<thead><tr><th></th><th>año</th><th>mes</th><th>día</th><th>parcial</th><th>total</th><th>traza</th></tr></thead><tbody>${final.map((r, i) => `<tr><td>${i}</td><td>${r.año}</td><td>${r.mes}</td><td>${r.día}</td><td>${r.parcial}</td><td>${r.total}</td><td>${r.traza}</td></tr>`).join('')}</tbody>`
         },
       ];

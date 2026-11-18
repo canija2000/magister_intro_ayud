@@ -6,6 +6,7 @@ Material de ayudantía en formato de páginas web interactivas. Cada ayudantía 
 |---|---|
 | [Ayudantía 1](ayudantia_1.html) | Webscraping y APIs |
 | [Ayudantía 2](ayudantia_2.html) | Análisis exploratorio y regresión lineal (datos PAES 2026, DEMRE) |
+| [Ayudantía 3](ayudantia_3.html) | De explicar a predecir: scikit-learn, KNN, árboles, random forest, k-means y una red neuronal |
 
 ## Ver el sitio
 
@@ -19,6 +20,8 @@ Para verlo localmente, basta con abrir `index.html` en el navegador.
 index.html          portada con enlaces a cada ayudantía
 ayudantia_1.html    Webscraping y APIs
 ayudantia_2.html    EDA y regresión lineal
+ayudantia_3.html    modelos predictivos y k-means
+notebooks/          notebooks de respaldo (leen los CSV desde data/)
 .nojekyll           le indica a GitHub Pages que sirva los archivos tal cual
 ```
 
@@ -31,3 +34,7 @@ ayudantia_2.html    EDA y regresión lineal
 ## Fuentes de datos
 
 - Ayudantía 2: bases públicas del Proceso de Admisión 2026, [DEMRE](https://demre.cl/), Universidad de Chile. Los widgets usan agregados y una muestra de 2.000 casos incrustados en la página; los CSV originales no se incluyen en el repositorio.
+
+## Notebooks de respaldo
+
+`notebooks/ayudantia_3.ipynb` reproduce todas las cifras de la ayudantía 3. Necesita los CSV del DEMRE en `data/` (`PAES.csv` y `B_SOCIOECONOMICO_DOMICILIO_PAES_2026_PUB_MRUN.csv`), que no se suben al repositorio.

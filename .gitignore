@@ -1,5 +1,6 @@
 # Notebooks de referencia (no se publican)
 *.ipynb
+!notebooks/*.ipynb
 .ipynb_checkpoints/
 
 # Datos crudos y entornos

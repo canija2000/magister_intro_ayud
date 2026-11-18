@@ -1564,7 +1564,8 @@
             <button id="showAll" title="Mostrar todo el código">Mostrar código</button>
             <button id="hideAll" title="Ocultar todo el código">Ocultar código</button>
             <a class="btn" href="index.html" title="Todas las ayudantías">⌂ Inicio</a>
-            <a class="btn primary" href="ayudantia_1.html">← Ir a Ayudantía 1</a>
+            <a class="btn" href="ayudantia_1.html">← Ayudantía 1</a>
+            <a class="btn primary" href="ayudantia_3.html">Ir a Ayudantía 3 →</a>
             <button id="themeBtn" title="Cambiar tema" aria-label="Cambiar tema">◐</button>
           </div>
         </div>
@@ -1583,7 +1584,7 @@
           a partir de otras.</p>
         <p>Para ser más consistentes, trabajaremos con un solo set de datos</p>
         <div class="callout def">
-          <div class="ct">❓</div>
+          <div class="ct"></div>
           <p><b>¿Qué se asocia con el puntaje de Matemática (M1) en la PAES?</b> ¿Las notas del colegio, el tipo de
             establecimiento, el ingreso familiar?</p>
           <p>
@@ -2315,7 +2316,7 @@ rmse = eval_measures.rmse(y, results.predict(X))   # 124.1</pre>
           <b>manteniendo constantes las demás variables</b>.
         </p>
         <div class="callout def">
-          <div class="ct">📘 Variables categóricas: <em>dummies</em></div>
+          <div class="ct">Variables categóricas: <em>dummies</em></div>
           <p>OLS solo multiplica números, así que una categoría como la dependencia se convierte en columnas de 0 y 1
             (<em>dummies</em>). Agrupamos las seis dependencias en tres: <b>público</b> (municipal, SLE y
             corporaciones),
@@ -2339,7 +2340,7 @@ X = sm.add_constant(pd.concat([muestra[['NEM', 'DECIL']], dummies], axis=1))
 multi = sm.OLS(muestra['M1'], X).fit()</pre>
         </details>
         <div class="callout warn">
-          <div class="ct">⚠️ ¿Por qué no incluir las tres dummies?</div>
+          <div class="ct">¿Por qué no incluir las tres dummies?</div>
           <p>Toda persona es pública, subvencionada o pagada, así que \(\text{PUBLICO} + \text{SUBV} + \text{PAGADO} =
             1\) en todas las filas, que es justo la columna <code>const</code>. Con las tres, \(\mathbf X^\top\mathbf
             X\)
@@ -2397,7 +2398,7 @@ multi = sm.OLS(muestra['M1'], X).fit()</pre>
             combinarlas en un índice.</li>
         </ol>
         <div class="callout tip">
-          <div class="ct">💡 Un caso más sutil: NEM + RANKING</div>
+          <div class="ct">Un caso más sutil: NEM + RANKING</div>
           <p>Sola, RANKING tiene pendiente <b>positiva</b> (0.44). Junto al NEM, su coeficiente pasa a ser
             <b>negativo</b>
             (−0.95). Aquí el signo sí tiene una lectura. El coeficiente ahora responde otra pregunta: <em>entre personas
@@ -2554,7 +2555,7 @@ multi = sm.OLS(muestra['M1'], X).fit()</pre>
       $$('.opts button', q).forEach((b, i) => b.onclick = () => {
         $$('.opts button', q).forEach(x => x.classList.remove('right', 'wrong'));
         b.classList.add(i === ans ? 'right' : 'wrong');
-        fb.textContent = i === ans ? '✅ ' + fb.dataset.ok : '❌ ' + fb.dataset.bad;
+        fb.textContent = i === ans ? '' + fb.dataset.ok : '' + fb.dataset.bad;
       });
     });
 
@@ -2831,7 +2832,7 @@ multi = sm.OLS(muestra['M1'], X).fit()</pre>
           rect.onmousemove = e => showTip(e, `${idx}=${esc(lab(idx, r))}${cl ? `, ${cl}=${esc(lab(cl, c))}` : ''}<br>${agg}: ${agg === 'count' ? fmtN(x) : x.toFixed(1)}<br>n = ${fmtN(N[i][j])}`); rect.onmouseleave = hideTip;
         }));
         $('#pvLeg').innerHTML = cl ? C.map((c, j) => `<span><i style="background:${pal[j % pal.length]}"></i>${cl}=${esc(lab(cl, c))}</span>`).join('') : '';
-        $('#pvNote').innerHTML = (raw ? '⚠️ Sin limpiar, <code>99</code> y <code>\' \'</code> aparecen como si fueran un decil o una dependencia más. ' : '') + (agg === 'mean' && ymin > 0 ? `El eje y del gráfico parte en ${ymin} y no en 0, para que se vean las diferencias (<code>pv.plot.bar()</code> parte en 0). Un eje recortado <b>exagera</b> las diferencias: compara la altura de las barras con los números de la tabla.` : '');
+        $('#pvNote').innerHTML = (raw ? 'Sin limpiar, <code>99</code> y <code>\' \'</code> aparecen como si fueran un decil o una dependencia más. ' : '') + (agg === 'mean' && ymin > 0 ? `El eje y del gráfico parte en ${ymin} y no en 0, para que se vean las diferencias (<code>pv.plot.bar()</code> parte en 0). Un eje recortado <b>exagera</b> las diferencias: compara la altura de las barras con los números de la tabla.` : '');
       }
       ['#pvIdx', '#pvCol', '#pvVal', '#pvAgg', '#pvRaw'].forEach(s => $(s).onchange = draw);
       redrawAll.push(draw); draw();
@@ -2928,7 +2929,7 @@ multi = sm.OLS(muestra['M1'], X).fit()</pre>
         $('#fitXh').textContent = noC ? 'X = muestra[x]   (sin constante)' : 'X = sm.add_constant(muestra[x])';
         $('#fitXm').innerHTML = `<table class="df"><thead><tr><th></th>${Hh.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${x.slice(0, 5).map((v, i) => `<tr><th>${i}</th>${noC ? '' : '<td>1.0</td>'}<td>${(+v).toFixed(xv === 'NOTAS' ? 2 : 1)}</td></tr>`).join('')}</tbody></table>`;
         $('#fitNote').innerHTML = noC
-          ? `Sin la columna <code>const</code>, la recta tiene que pasar por (0, 0) ⭕. El mejor ajuste posible es \\(\\hat y = ${fit0.beta[0].toPrecision(4)}\\,x\\), con RMSE ${fit0.rmse.toFixed(1)}. Aun así, el R² no centrado se ve "excelente".`
+          ? `Sin la columna <code>const</code>, la recta tiene que pasar por (0, 0) . El mejor ajuste posible es \\(\\hat y = ${fit0.beta[0].toPrecision(4)}\\,x\\), con RMSE ${fit0.rmse.toFixed(1)}. Aun así, el R² no centrado se ve "excelente".`
           : `OLS para <code>M1 ~ ${xv}</code>: \\(\\hat\\beta_0 = ${fitC.beta[0].toFixed(2)}\\), \\(\\hat\\beta_1 = ${fitC.beta[1].toPrecision(4)}\\), \\(R^2 = ${fitC.r2.toFixed(3)}\\). Mueve los sliders: cualquier otra recta tiene un SSE mayor.`;
         if (window.renderMathInElement) renderMathInElement($('#fitNote'), { delimiters: [{ left: '\\(', right: '\\)', display: false }] });
       }
